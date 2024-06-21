@@ -1,4 +1,4 @@
-# Laravel 11 API BE CRUD with Migrations, Seeding, Swagger, Unit Testing etc.
+# Laravel 11 API BE CRUD with Migrations, Seeding, Swagger, Unit Testing, Docker etc.
 Repo for Laravel BE
 
 # How to run the application
