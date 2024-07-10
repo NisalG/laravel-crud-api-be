@@ -1,8 +1,9 @@
 <?php
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\V2\AuthController;
+use App\Http\Controllers\Api\V2\PostController;
+use App\Http\Controllers\Api\V2\UserController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -23,3 +24,5 @@ Route::group(['prefix' => 'posts', 'middleware' => 'auth:sanctum'], function () 
     Route::delete('/{id}', [PostController::class, 'destroy']);
     Route::get('/answers', [PostController::class, 'getAnswers']);
 });
+
+Route::get('/users', [UserController::class, 'index']); //Users to check if API V1 works
