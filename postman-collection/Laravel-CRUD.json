@@ -7,6 +7,26 @@
     },
     "item": [
         {
+            "name": "Users to check if API V1 works",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Accept",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "http://127.0.0.1:8000/api/v1/users",
+                    "protocol": "http",
+                    "host": ["127", "0", "0", "1"],
+                    "port": "8000",
+                    "path": ["api", "v1", "users"]
+                }
+            },
+            "response": []
+        },
+        {
             "name": "Register",
             "request": {
                 "method": "POST",
@@ -42,11 +62,11 @@
                     ]
                 },
                 "url": {
-                    "raw": "http://127.0.0.1:8000/api/register",
+                    "raw": "http://127.0.0.1:8000/api/v2/register",
                     "protocol": "http",
                     "host": ["127", "0", "0", "1"],
                     "port": "8000",
-                    "path": ["api", "register"]
+                    "path": ["api", "v2", "register"]
                 }
             },
             "response": []
@@ -77,11 +97,11 @@
                     ]
                 },
                 "url": {
-                    "raw": "http://127.0.0.1:8000/api/login",
+                    "raw": "http://127.0.0.1:8000/api/v2/login",
                     "protocol": "http",
                     "host": ["127", "0", "0", "1"],
                     "port": "8000",
-                    "path": ["api", "login"]
+                    "path": ["api", "v2", "login"]
                 }
             },
             "response": []
@@ -102,11 +122,11 @@
                 "method": "POST",
                 "header": [],
                 "url": {
-                    "raw": "http://127.0.0.1:8000/api/logout?Accept=application/json",
+                    "raw": "http://127.0.0.1:8000/api/v2/logout?Accept=application/json",
                     "protocol": "http",
                     "host": ["127", "0", "0", "1"],
                     "port": "8000",
-                    "path": ["api", "logout"],
+                    "path": ["api", "v2", "logout"],
                     "query": [
                         {
                             "key": "Accept",
@@ -138,11 +158,11 @@
                     }
                 ],
                 "url": {
-                    "raw": "http://127.0.0.1:8000/api/faqs/answers?faq=\"what is a deductible?\"",
+                    "raw": "http://127.0.0.1:8000/api/v2/faqs/answers?faq=\"what is a deductible?\"",
                     "protocol": "http",
                     "host": ["127", "0", "0", "1"],
                     "port": "8000",
-                    "path": ["api", "faqs", "answers"],
+                    "path": ["api", "v2", "faqs", "answers"],
                     "query": [
                         {
                             "key": "faq",
@@ -174,11 +194,41 @@
                     }
                 ],
                 "url": {
-                    "raw": "http://127.0.0.1:8000/api/posts",
+                    "raw": "http://127.0.0.1:8000/api/v2/posts",
                     "protocol": "http",
                     "host": ["127", "0", "0", "1"],
                     "port": "8000",
-                    "path": ["api", "posts"]
+                    "path": ["api", "v2", "posts"]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Get Post by ID",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "3|oLlYuL7pyakdya8hWJbfWTC6dqgzUNfTUZtFZPCw303f5738",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Accept",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "http://127.0.0.1:8000/api/v2/posts/{id}",
+                    "protocol": "http",
+                    "host": ["127", "0", "0", "1"],
+                    "port": "8000",
+                    "path": ["api", "v2", "posts", "{id}"]
                 }
             },
             "response": []
@@ -219,11 +269,11 @@
                     }
                 },
                 "url": {
-                    "raw": "http://127.0.0.1:8000/api/posts",
+                    "raw": "http://127.0.0.1:8000/api/v2/posts",
                     "protocol": "http",
                     "host": ["127", "0", "0", "1"],
                     "port": "8000",
-                    "path": ["api", "posts"]
+                    "path": ["api", "v2", "posts"]
                 }
             },
             "response": []
@@ -265,11 +315,11 @@
                     }
                 },
                 "url": {
-                    "raw": "http://127.0.0.1:8000/api/posts/1",
+                    "raw": "http://127.0.0.1:8000/api/v2/posts/1",
                     "protocol": "http",
                     "host": ["127", "0", "0", "1"],
                     "port": "8000",
-                    "path": ["api", "posts", "1"]
+                    "path": ["api", "v2", "posts", "1"]
                 }
             },
             "response": []
@@ -295,11 +345,11 @@
                     }
                 ],
                 "url": {
-                    "raw": "http://127.0.0.1:8000/api/posts/1",
+                    "raw": "http://127.0.0.1:8000/api/v2/posts/1",
                     "protocol": "http",
                     "host": ["127", "0", "0", "1"],
                     "port": "8000",
-                    "path": ["api", "posts", "1"]
+                    "path": ["api", "v2", "posts", "1"]
                 }
             },
             "response": []

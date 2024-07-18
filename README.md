@@ -1,17 +1,151 @@
-# Laravel 11 API BE CRUD with Migrations, Seeding, Swagger, Unit Testing, Docker etc.
-Repo for Laravel BE
+# Laravel 11 Adavanced API BE CRUD
 
-# How to run the application
+# Advanced Features Included
+- Swagger
+- Docker
+- Testing
+    - TDD Unit & Feature
+    - Mocking External (Third Party) APIs and Services (CoinGecko Cryptocurrency Data API)
+- Service Container and Service Providers
+- Eloquent Techniques
+    - One-to-One Relationship
+    - Many-to-Many Relationship
+    - Polymorphic Relationship
+    - Eager Loading
+    - Lazy Loading
+    - Advanced Querying Techniques
+        - Subqueries
+        - Custom Scopes
+    - Advanced Eloquent Techniques
+        - Events and Observers
+        - Mutators and Accessors
+-"Below section - Coming in Next Week.................."
+- API 
+    - Versioning
+    - Rate Limiting & Throtteling
+    - API Request validation by extending Illuminate\Foundation\Http\FormRequest
+    - API Resource for transforming Responses extending Illuminate\Http\Resources\Json\JsonResource 
+    - Error Handling and Validation
+- Security Best Practices used
+    - Protect Against Common Vulnerabilities
+        - Cross-Site Scripting (XSS)
+        - Cross-Site Request Forgery (CSRF)
+        - SQL Injection
+    - Use of Laravel's Built-in Security Features
+        - Authentication with Sanctum
+        - Password Hashing
+        - Rate Limiting & Throtteling
+    - Additional Security Measures
+        - HTTPS
+        - Environment Configuration
+        - Data Encryption
+- Middlewares
+    - Role-Based Access Control Middleware
+    - Logging User Activity Middleware
+    - Throttle Middleware with Custom Limits
+    - Localization Middleware
+    - CORS Middleware
+- Scheduling
+    - Scheduling Queued Jobs
+    - Scheduling Artisan Commands
+- Caching with Redis
+- Mails 
+    - Uses Mailable, Queueable, SerializesModels, Envelope, Content etc.
+- Notifications
+    - Events
+    - Listeners
+    - Queueable
+    - ServiceProvider
+    - DB tables
+- Event Broadcasting (WebSockets)
+- AWS services
+    - AWS SDK for PHP
+    - File Storage - AWS S3
+    - Parameter Store
+    - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used)
+    - Elasticbeanstalk Extensions (.ebexensions)
+    - SES (To do)
+    - SQS (To do)
+- Customized Exceptions Handling with Json Responses, Logging and Sentry integration
+- Centralized Application Constants
+- Migrations and Seeding
+
+# Relevant Artisan commands and Source files for above Advance Features
+- Swagger
+    - Swagger UI library to generate interactive documentation - commands:
+        - `npm install swagger-ui-dist`
+        - `composer require darkaonline/l5-swagger tymon/jwt-auth`
+        - `php artisan vendor:publish --provider=”Tymon\JWTAuth\Providers\LaravelServiceProvider”`
+    - Generate the Swagger documentation: `php artisan l5-swagger:generate`
+    - Access Swagger API Documentation URL: `http://your-app-url/api/documentation`
+- Docker
+    - Files:
+        - Dockerfile
+        - docker-compose.yml
+        - docker-compose-sample.yml (another sample file with set of different commands)
+    - Dockerfile commands:
+        - `docker build`
+        - `docker run`
+    - docker-compose.yml commands:
+        - `docker-compose up`
+        - `docker-compose down`
+        - `docker-compose ps`
+        - `docker-compose build`
+        - `docker ps` (all containers)
+        - `docker ps -a` (all containers, including stopped)
+        - `docker stop <container_id>`
+        - `docker rm <container_id>`
+        - `docker images`
+        - `docker pull <image_name>`
+        - `docker exec -it <container_id> bash` (enter running container)
+        - `docker commit <container_id> <new_image_name>` (create new image from container)
+- Unit & Feature Testing (TDD)
+    - Common commands:
+        - Make: `php artisan make:test FaqsTableSeederTest`
+        - Run all: `php artisan test`
+        - To run a specific test class, provide the path to the test file: `php artisan test --filter ExampleTest`
+        - Run a Specific Test Method: `php artisan test --filter 'ExampleTest::testBasicExample'`
+    - Enable Detailed Error Messages in Tests:
+        - Check Log files
+        - Update phpunit.xml: `<env name="APP_DEBUG" value="true"/>`
+        - Create File: `tests/CreatesApplication.php`
+        - Modify the exception handling in your TestCase class to throw exceptions instead of rendering them. See tests\TestCase.php
+    - Post Controller testing:
+        - `php artisan make:factory PostFactory --model=Post`
+        - Change `database\factories\PostFactory.php`
+        - Make sure your Post model uses the HasFactory trait.
+        - Test: `php artisan test --filter 'PostControllerTest::it_can_list_all_posts'`
+    - Mocking External (Third Party) APIs and Services (CoinGecko Cryptocurrency Data API)
+        - Create a Service for CoinGecko API: app/Services/CoinGeckoService.php
+        - Create a Controller: app/Http/Controllers/CoinGeckoController.php
+        - Define Routes: routes/api.php
+        - Get Cryptocurrency Data by URL: http://127.0.0.1:8000/api/cryptocurrency/bitcoin
+        - Get Market Data by URL: http://127.0.0.1:8000/api/market-data
+        - Create Unit Test Cases for the Service: tests/Unit/CoinGeckoServiceTest.php
+        - Create Feature Test Cases for the Controller: tests/Feature/CoinGeckoControllerTest.php
+        - Run the Tests: `php artisan test` 
+- Service Container and Service Providers
+    - Service Class: app/Services/S3Service.php
+    - Service Provider: 
+        - Artisan command: `php artisan make:provider S3ServiceProvider`
+        - File: app/Providers/S3ServiceProvider.php
+    - Register the Service Provider in config/app.php
+    - Use in a Controller: app/Http/Controllers/S3Controller.php
+- 
+
+# How to run the application 
 - Install required Composer packages using: `composer i`
 - Set proper database configuration in `.env`
 - Run migration: `php artisan migrate`
 - Run seeder: `php artisan db:seed`
 - Run application locally: `php artisan serve`
 - Postman collection useful for testing the API end points is available in `postman-collection` directory
-- Run test cases: `php artisan test`
 - Access Swagger API Documentation URL: `http://your-app-url/api/documentation`
 
 
+##########################################################################################################
+#
+#
 # Larevl Default
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 

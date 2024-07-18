@@ -37,7 +37,7 @@ class PostsTableSeederTest extends TestCase
     {
         $storageMock = Mockery::mock('alias:Illuminate\Support\Facades\Storage');
         $storageMock->shouldReceive('exists')
-            ->with('D:/xampp/htdocs/laravel-crud-api/storage/app/faqs.csv')
+            ->with('/storage/app/faqs.csv')
             ->andReturn(false); // File not exists
 
         // Create a mock instance of the seeder
@@ -63,7 +63,7 @@ class PostsTableSeederTest extends TestCase
     {
         $storageMock = Mockery::mock('alias:Illuminate\Support\Facades\Storage');
         $storageMock->shouldReceive('exists')
-            ->with('D:/xampp/htdocs/laravel-crud-api/storage/app/faqs.csv')
+            ->with('/storage/app/faqs.csv')
             ->andReturn(true); // File exists
 
         // Create a mock instance of the seeder

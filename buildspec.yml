@@ -1,0 +1,53 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      php: 8.2
+  pre_build:
+    commands:
+      - apt-get update
+      - apt-get install -y zip unzip
+      - cd src
+      # - echo "Set Elastic Beanstalk Environment Properties"
+      # - echo "DB_HOST="$DB_HOST"" >> .env
+      # - echo "DB_PORT=\"$RDS_PORT\"" >> .env
+      # - echo "DB_DATABASE="database-2"" >> .env
+      # - echo "DB_USERNAME=\"$DB_USERNAME\"" >> .env
+      # - echo "DB_PASSWORD=\"$DB_PASSWORD\"" >> .env
+      - composer install --no-interaction --no-scripts
+      - cd ..
+  build:
+    commands:
+      - cd src
+      # - cat .env
+      # cp /tmp/envfile .env
+      # - cp src/.env ./
+      # - php artisan key:generate
+      # - php artisan config:cache # enable this when aplication is in a new environment for the first time
+      # - php artisan route:cache
+      - php artisan view:cache
+      - php artisan cache:clear
+      - php artisan config:clear
+      # - php artisan migrate --force
+      # printenv
+      - php artisan migrate
+      - php artisan tenants:migrate
+      # - php artisan db:seed
+      - cd ..
+  post_build:
+    commands:
+    - echo Build completed on `date`
+    # - zip -r application.zip .
+    # - zip -r application.zip src -x src/vendor/**\*
+    - cp -r .ebextensions ./src/
+    - cd src
+artifacts:
+  files: '**/*'
+  # files:
+  #   - .ebextensions/**/*
+  #   - src/**/*
+  base-directory: 'src/'
+  exclude-paths: '**/src/vendor'
+#proxy:
+#  upload-artifacts: yes
+#  logs: yes

@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\V2\AuthController;
 use App\Http\Controllers\Api\V2\PostController;
 use App\Http\Controllers\Api\V2\UserController;
 
+use App\Http\Controllers\Api\V2\CoinGeckoController;
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
@@ -26,3 +28,6 @@ Route::group(['prefix' => 'posts', 'middleware' => 'auth:sanctum'], function () 
 });
 
 Route::get('/users', [UserController::class, 'index']); //Users to check if API V1 works
+
+Route::get('cryptocurrency/{id}', [CoinGeckoController::class, 'getCryptocurrencyData']);
+Route::get('market-data', [CoinGeckoController::class, 'getMarketData']);

@@ -42,7 +42,7 @@ class PostControllerTest extends TestCase
     {
         Post::factory()->count(3)->create();
 
-        $response = $this->getJson('/api/posts');
+        $response = $this->getJson('/api/v2/posts');
 
         $response->assertStatus(200)
             ->assertJsonCount(3);
@@ -64,7 +64,7 @@ class PostControllerTest extends TestCase
             'published_at' => $this->faker->date,
         ];
 
-        $response = $this->postJson('/api/posts', $postData);
+        $response = $this->postJson('/api/v2/posts', $postData);
 
         if ($response->status() === 422) {
             // Output the validation errors
@@ -92,7 +92,7 @@ class PostControllerTest extends TestCase
     {
         $post = Post::factory()->create();
 
-        $response = $this->getJson("/api/posts/{$post->id}");
+        $response = $this->getJson("/api/v2/posts/{$post->id}");
 
         $response->assertStatus(200)
             ->assertJsonFragment([
@@ -122,7 +122,7 @@ class PostControllerTest extends TestCase
             'published_at' => $this->faker->date,
         ];
 
-        $response = $this->putJson("/api/posts/{$post->id}", $updatedData);
+        $response = $this->putJson("/api/v2/posts/{$post->id}", $updatedData);
 
         $response->assertStatus(200)
             ->assertJsonFragment([
@@ -144,7 +144,7 @@ class PostControllerTest extends TestCase
     {
         $post = Post::factory()->create();
 
-        $response = $this->deleteJson("/api/posts/{$post->id}");
+        $response = $this->deleteJson("/api/v2/posts/{$post->id}");
 
         $response->assertStatus(200)
             ->assertJsonFragment(['message' => 'Post deleted successfully']);
@@ -162,7 +162,7 @@ class PostControllerTest extends TestCase
     {
         Post::factory()->create(['content' => 'This is a sample FAQ answer.']);
 
-        $response = $this->getJson('/api/posts/answers?faq="sample"');
+        $response = $this->getJson('/api/v2/posts/answers?faq="sample"');
 
         $response->assertStatus(200)
             ->assertJsonFragment(['content' => 'This is a sample FAQ answer.']);

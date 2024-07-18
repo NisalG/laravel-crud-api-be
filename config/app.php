@@ -137,6 +137,7 @@ return [
         App\Providers\AppServiceProvider::class,
         // App\Providers\AuthServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\S3ServiceProvider::class,
     ])->toArray(),
 
 ];
