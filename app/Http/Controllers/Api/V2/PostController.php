@@ -505,4 +505,10 @@ class PostController extends Controller
 
         return response()->json($results);
     }
+
+    public function getPublishedPosts(Request $request)
+    {
+        $publishedPosts = Post::published()->get();
+        return response()->json($publishedPosts);
+    }
 }

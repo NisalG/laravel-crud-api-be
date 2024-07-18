@@ -8,7 +8,7 @@
     - Mocking External (Third Party) APIs and Services (CoinGecko Cryptocurrency Data API)
 - Service Container and Service Providers
 - Eloquent Techniques
-    - One-to-One Relationship
+    - One-to-One Relationship: 
     - Many-to-Many Relationship
     - Polymorphic Relationship
     - Eager Loading
@@ -17,15 +17,17 @@
         - Subqueries
         - Custom Scopes
     - Advanced Eloquent Techniques
+        - Mutators
+        - Accessors
         - Events and Observers
-        - Mutators and Accessors
--"Below section - Coming in Next Week.................."
-- API 
+- API
+    - Authentication with Sanctum
     - Versioning
     - Rate Limiting & Throtteling
     - API Request validation by extending Illuminate\Foundation\Http\FormRequest
     - API Resource for transforming Responses extending Illuminate\Http\Resources\Json\JsonResource 
     - Error Handling and Validation
+- "Below sections - Coming in Next Week.................."    
 - Security Best Practices used
     - Protect Against Common Vulnerabilities
         - Cross-Site Scripting (XSS)
@@ -131,7 +133,42 @@
         - File: app/Providers/S3ServiceProvider.php
     - Register the Service Provider in config/app.php
     - Use in a Controller: app/Http/Controllers/S3Controller.php
-- 
+- Eloquent Techniques
+    - One-to-One Relationship:
+        - app\Models\CategoryDetail.php >> category()
+        - app\Models\Category.php >> detail()
+    - Many-to-Many Relationship
+        - app\Models\Tag.php >> posts()
+        - app\Models\Post.php >> tags()
+    - Polymorphic Relationship
+        - app\Models\Comment.php >> commentable()
+        - app\Models\Post.php >> comments()
+        - app\Models\Category.php >> comments()
+    - Eager Loading: app\Http\Controllers\Api\V2\CategoryController.php
+    - Lazy Loading: app\Http\Controllers\Api\V2\CategoryController.php
+    - Advanced Querying Techniques
+        - Subqueries: app\Http\Controllers\Api\V2\CategoryController.php  >> getCategoriesWithPostsCount()
+        - Custom Scopes:
+            - Create: app\Models\Post.php >> scopePublished($query)
+            - Usage: app\Http\Controllers\Api\V2\PostController.php >> getPublishedPosts(Request $request)
+    - Advanced Eloquent Techniques
+        - Mutators: app\Models\Post.php >> setTitleAttribute($value)
+        - Accessors: app\Models\Post.php >> getTitleAttribute($value)
+        - Events and Observers: Eloquent lifecycle events and observers in Laravel allow you to handle model lifecycle events, keeping your code clean and organized by separating concerns.
+            - Eloquent Events: retrieved, creating, created, updating, updated, saving, saved, deleting, deleted, restoring, restored
+            - Usage of Eloquent Events: Automatically setting attributes, sending notifications, logging activities, validating data, enforcing business rules
+            - Benefits of Using Observers: Separation of concerns, reusability, organization, improved code readability, maintainability, centralized event handling logic
+            - Create an Observer: `php artisan make:observer PostObserver --model=Post`
+            - Created file: App\Observers\PostObserver.php
+            - Register the Observer: App\Providers\AppServiceProvider.php
+    - API
+        - Authentication with Sanctum
+        - Versioning
+        - Rate Limiting & Throtteling
+        - API Request validation by extending Illuminate\Foundation\Http\FormRequest
+        - API Resource for transforming Responses extending Illuminate\Http\Resources\Json\JsonResource 
+        - Error Handling and Validation    
+- "Other sections - Coming in Next Week.................."
 
 # How to run the application 
 - Install required Composer packages using: `composer i`

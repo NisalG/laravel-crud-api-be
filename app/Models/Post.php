@@ -21,4 +21,31 @@ class Post extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class);
+    }
+    public function comments()
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+
+    //  Custom Scope
+    public function scopePublished($query)
+    {
+        return $query->whereNotNull('published_at'); // Usage: $publishedPosts = Post::published()->get();
+    }
+
+    // Mutator
+    public function setTitleAttribute($value)
+    {
+        $this->attributes['title'] = ucfirst($value);
+    }
+
+    // Accessor
+    public function getTitleAttribute($value)
+    {
+        return strtoupper($value);
+    }
 }
