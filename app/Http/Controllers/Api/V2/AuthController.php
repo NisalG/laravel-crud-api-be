@@ -1,59 +1,59 @@
 <?php
 
- namespace App\Http\Controllers\Api\V2;
+namespace App\Http\Controllers\Api\V2;
 
- use App\Http\Controllers\Controller;
- use App\Models\User;
- use Illuminate\Http\Request;
- use Illuminate\Support\Facades\Hash;
- use Illuminate\Support\Facades\Validator;
- use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
- class AuthController extends Controller
- {
+class AuthController extends Controller
+{
     /**
-    * @OA\Post(
-    *     path="/api/register",
-    *     operationId="registerUser",
-    *     tags={"Authentication"},
-    *     summary="Register a new user",
-    *     description="User Registration Endpoint",
-    *     @OA\RequestBody(
-    *         @OA\JsonContent(),
-    *         @OA\MediaType(
-    *             mediaType="multipart/form-data",
-    *             @OA\Schema(
-    *                 type="object",
-    *                 required={"name","email","password","password_confirmation"},
-    *                 @OA\Property(property="name",type="text"),
-    *                 @OA\Property(property="email",type="text"),
-    *                 @OA\Property(property="password",type="password"),
-    *                 @OA\Property(property="password_confirmation",type="password"),
-    *             ),
-    *         ),
-    *     ),
-    *     @OA\Response(
-    *         response="201",
-    *         description="User Registered Successfully",
-    *         @OA\JsonContent()
-    *     ),
-    *     @OA\Response(
-    *       response="200",
-    *       description="Registered Successfull",
-    *       @OA\JsonContent()
-    *     ),
-    *     @OA\Response(
-    *         response="422",
-    *         description="Unprocessable Entity",
-    *         @OA\JsonContent()
-    *     ),
-    *     @OA\Response(
-    *         response="400",
-    *         description="Bad Request",
-    *         @OA\JsonContent()
-    *     ),
-    * )
-    */
+     * @OA\Post(
+     *     path="/api/register",
+     *     operationId="registerUser",
+     *     tags={"Authentication"},
+     *     summary="Register a new user",
+     *     description="User Registration Endpoint",
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 required={"name","email","password","password_confirmation"},
+     *                 @OA\Property(property="name",type="text"),
+     *                 @OA\Property(property="email",type="text"),
+     *                 @OA\Property(property="password",type="password"),
+     *                 @OA\Property(property="password_confirmation",type="password"),
+     *             ),
+     *         ),
+     *     ),
+     *     @OA\Response(
+     *         response="201",
+     *         description="User Registered Successfully",
+     *         @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *       response="200",
+     *       description="Registered Successfull",
+     *       @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *         response="422",
+     *         description="Unprocessable Entity",
+     *         @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *         response="400",
+     *         description="Bad Request",
+     *         @OA\JsonContent()
+     *     ),
+     * )
+     */
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -84,68 +84,72 @@
 
     //  Login API
     /**
-    * @OA\Post(
-    *     path="/api/login",
-    *     operationId="loginUser",
-    *     tags={"Authentication"},
-    *     summary="Login a user",
-    *     description="User Login Endpoint",
-    *     @OA\RequestBody(
-    *         @OA\JsonContent(),
-    *         @OA\MediaType(
-    *             mediaType="multipart/form-data",
-    *             @OA\Schema(
-    *                 type="object",
-    *                 required={"email","password"},
-    *                 @OA\Property(property="email",type="text"),
-    *                 @OA\Property(property="password",type="password"),
-    *             ),
-    *         ),
-    *     ),
-    *     @OA\Response(
-    *         response="201",
-    *         description="User Login Successfully",
-    *         @OA\JsonContent()
-    *     ),
-    *     @OA\Response(
-    *       response="200",
-    *       description="Login Successfull",
-    *       @OA\JsonContent()
-    *     ),
-    *     @OA\Response(
-    *         response="422",
-    *         description="Unprocessable Entity",
-    *         @OA\JsonContent()
-    *     ),
-    *     @OA\Response(
-    *         response="400",
-    *         description="Bad Request",
-    *         @OA\JsonContent()
-    *     ),
-    * )
-    */
+     * @OA\Post(
+     *     path="/api/login",
+     *     operationId="loginUser",
+     *     tags={"Authentication"},
+     *     summary="Login a user",
+     *     description="User Login Endpoint",
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(),
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 required={"email","password"},
+     *                 @OA\Property(property="email",type="text"),
+     *                 @OA\Property(property="password",type="password"),
+     *             ),
+     *         ),
+     *     ),
+     *     @OA\Response(
+     *         response="201",
+     *         description="User Login Successfully",
+     *         @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *       response="200",
+     *       description="Login Successfull",
+     *       @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *         response="422",
+     *         description="Unprocessable Entity",
+     *         @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *         response="400",
+     *         description="Bad Request",
+     *         @OA\JsonContent()
+     *     ),
+     * )
+     */
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+        try {
+            $validator = dddValidator::make($request->all(), [
+                'email' => 'required|string|email',
+                'password' => 'required|string',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            $credentials = $request->only('email', 'password');
+            if (!Auth::attempt($credentials)) {
+                return response()->json(['message' => 'Invalid credentials'], 401);
+            }
+
+            $token = auth()->user()->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'message' => 'Login successful',
+                'token' => $token,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to retrieve posts', 'message' => $e->getMessage()], 500);
         }
-
-        $credentials = $request->only('email', 'password');
-        if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
-        }
-
-        $token = auth()->user()->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login successful',
-            'token' => $token,
-        ]);
     }
 
     public function logout(Request $request)
@@ -160,4 +164,4 @@
 
         return response()->json(['message' => 'Logged out successfully']);
     }
- }
+}

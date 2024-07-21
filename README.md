@@ -1,6 +1,6 @@
 # Laravel 11 Adavanced API BE CRUD
 
-# Advance Features Included
+# Advance Features Included (Please check below for detailed guide)
 - **Swagger**
 - **Docker**
 - **Testing**
@@ -265,13 +265,43 @@
     - `id()`, `increment()` & `bigIncrements()`
         - `id()` - Laravel 8+: creates an auto-incrementing primary key column named `id`. It chooses the right data type (often `BIGINT`) based on your database.
         - `increment()` - Old method before Laravel 8 to do above with `INT`
-        - `bigIncrements()` -  - Old method before Laravel 8 to do above with `BIGINT`
+        - `bigIncrements()` - Old method before Laravel 8 to do above with `BIGINT`
     - `unsignedBigInteger()`: Foreign Keys: When creating a column to reference another table's primary key (often `id`), you'll typically use `unsignedBigInteger()`. This ensures sufficient storage and avoids negative values for foreign key references. E.g.: `database\migrations\2024_05_30_102005_create_posts_table.php` >> `$table->unsignedBigInteger('category_id')->nullable();`
     - morphs() - Used in Polypolymorphic relationship. See above "Eloquent Techniques" relationships.
 
 - **Customized Exceptions Handling with Json Responses, Logging and Sentry integration**
+    - `php artisan make:exception CustomExceptionHandler`
+        - File will be created: `app\Exceptions\CustomExceptionHandler.php`
+    - Binding the Custom Exception Handler to the service container in `bootstrap\app.php`
+    - Testing the Custom Exception Handler: 
+        - Make some change like a change in class name in `app\Http\Controllers\Api\V2\AuthController.php` to make the process go into `catch` and throw an exception
+        - Access the Login route on Postman: http://127.0.0.1:8000/api/v2/login 
+        - Response will be: `"message": "A custom exception occurred:....`
+        - If you remove the service container registration of `CustomExceptionHandler` from `bootstrap\app.php` >> `singleton()` the response will be the Laravel default exception `"message": "Class \"App\\Http\\Controllers\\Api\\V2\\DDDValidator\" not found.....",` etc.
+    - Laravel logs will be updated with Logs added in `CustomExceptionHandler` >> `report()` & `render()` methods
+    - Sentry integration:
+        - Install Sentry Laravel SDK: `composer require sentry/sentry-laravel`
+        - Publish the Sentry Configuration File: `php artisan vendor:publish --provider="Sentry\Laravel\ServiceProvider"`
+        - Configure Sentry in `config/sentry.php`
+        - Add Sentry DSN to Environment File: `.env` >> `SENTRY_LARAVEL_DSN=https://your-dsn@sentry.io/project-id`
+        - Add Sentry logging to `app\Exceptions\CustomExceptionHandler.php` >> `report()` 
 - **Centralized Application Constants**
-- **Security Best Practices used** - copy paste whats in gdoc > Security Best Practices. Add to code.
+    - Benefits:
+        - Centralized Configuration: Centralizes configuration values, making it easier to manage and update them in one place.
+
+        - Readability: Enhances code readability by using meaningful names instead of magic numbers or strings.
+
+        - Maintainability: Simplifies maintenance by allowing updates to values in a single class without changing multiple code occurrences.
+
+        - Avoiding Magic Numbers/Strings: Prevents bugs and confusion by giving meaningful names to values, avoiding direct use of numbers or strings.
+
+        - Consistency: Ensures consistent use of values throughout the application, reducing the risk of typos and inconsistencies.
+    - Define constants in `src\app\Constants\AppConstants.php`
+    - How to use:
+        - Importing the Constants Class: `use App\Constants\AppConstants;` where you want to use it
+        - `$status = AppConstants::POST_STATUS[$post->status];`
+        - `$categoryType = AppConstants::CATEGORY_TYPE[$post->category_type];`
+- **Security Best Practices used** - copy paste whats in my gdoc note > Security Best Practices. Add to code.
 - **Middlewares**
 
 - "Other sections - Coming in Next Week.................."
