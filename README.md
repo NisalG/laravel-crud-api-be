@@ -301,7 +301,50 @@
         - Importing the Constants Class: `use App\Constants\AppConstants;` where you want to use it
         - `$status = AppConstants::POST_STATUS[$post->status];`
         - `$categoryType = AppConstants::CATEGORY_TYPE[$post->category_type];`
-- **Security Best Practices used** - copy paste whats in my gdoc note > Security Best Practices. Add to code.
+- **Security Best Practices used** 
+    - Protect Against Common Vulnerabilities
+        - Cross-Site Scripting (XSS):
+            - Sanitize Inputs: 
+                - Common usage Laravel’s built-in validations
+                - Also can use `filter_var()` method to sanitize user inputs additionaly, but not a common practice: `filter_var($request->input('name'), FILTER_SANITIZE_STRING);`
+            - Escape Outputs:
+                - For APIs, the escaping of outputs is usually handled by ensuring the data returned is properly encoded as JSON, which Laravel does by default.
+                - Also can use `e()` method to escape outputs additionaly, but not a common practice: `$comment->name = e($comment->name);`
+                - For Blade templates, outputting variables is done using `{{ }}` which automatically escapes HTML: `{{ $comment->name }}`
+        - Cross-Site Request Forgery (CSRF):
+            - Laravel API projects: CSRF protection is typically disabled for `api` routes, 
+            using Laravel Sanctum stateless authentication tokens for secure token-based authentication and authorization.
+            - Laravel Web projects:
+                - CSRF Tokens: Laravel automatically generates a CSRF token for each active user session managed by the application. This token is used to verify that the authenticated user is the one actually making the requests to the application.`<form method="POST" action="/example">@csrf<!-- Other inputs --></form>`
+
+                - CSRF Middleware: Ensure that the `VerifyCsrfToken` middleware is enabled in  `Kernel.php` file:
+                `protected $middlewareGroups = ['web' => [ \App\Http\Middleware\VerifyCsrfToken::class,],];`
+        - SQL Injection:  Use Laravel’s query builder(Parameterized Queries) or Eloquent ORM to prevent SQL injection.
+            - Query Builder: `$users = DB::table('users')->where('email', $email)->get();`
+            - Eloquent ORM: `$user = User::where('email', $email)->first();`
+    - Use Laravel's Built-in Security Features
+        - Authentication: `php artisan make:auth` OR Use Sanctum for API authentication
+        - Password Hashing using Laravel’s Hash facade.
+            - `app\Http\Controllers\Api\V2\AuthController.php` >> `$user->password = Hash::make($request->password);`
+        - Throttle Requests: Use Laravel’s rate limiting to protect application from Brute-Force Attacks.
+            - `routes\api_v1.php` >> `Route::middleware('throttle:api').....`
+    - Additional Security Measures
+        - Force HTTPS by setting forceScheme in the AppServiceProvider:
+            `use Illuminate\Support\Facades\URL;`
+            `public function boot()`
+            `{`
+                `if (env('APP_ENV') !== 'local') {`
+                    `URL::forceScheme('https');`
+                `}`
+            `}`
+        - Environment Configuration
+            Secure .env file by not exposed to the public and sensitive information like database credentials and API keys are kept secure. See AWS Parameter Store implementation below.
+        - Encrypt Sensitive Data: Use Laravel’s encryption to store sensitive data securely.
+            `use Illuminate\Support\Facades\Crypt;`
+            `$encrypted = Crypt::encryptString('sensitive data');`
+            `$decrypted = Crypt::decryptString($encrypted);`
+        - Content Security Policy (CSP): Implement CSP: Use a content security policy to mitigate XSS attacks by defining which sources are allowed to load content on your site.
+
 - **Middlewares**
 
 - "Other sections - Coming in Next Week.................."
