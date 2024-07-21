@@ -511,4 +511,14 @@ class PostController extends Controller
         $publishedPosts = Post::published()->get();
         return response()->json($publishedPosts);
     }
+
+    // Polymorphic Relationship usage sample - Adding a comment to a post.
+    // Also see CategoryController >> addCategoryComment - Adding a comment to a category.
+    public function addCategoryComment(Request $request)
+    {
+        $post = Post::find($request->post_id);
+        $post->comments()->create([
+            'body' => 'This is a comment on a post.',
+        ]);
+    }
 }

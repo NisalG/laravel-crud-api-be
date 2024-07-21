@@ -11,7 +11,7 @@ class Category extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'category',
+        'name',
     ];
 
     public function posts()
@@ -19,7 +19,7 @@ class Category extends Model
         return $this->hasMany(Post::class);
     }
 
-    public function detail()
+    public function detail() //one-to-one
     {
         return $this->hasOne(CategoryDetail::class);
     }

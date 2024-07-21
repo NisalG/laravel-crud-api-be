@@ -60,4 +60,14 @@ class CategoryController extends Controller
     {
         $categories = Category::withCount('posts')->get();
     }
+
+    // Polymorphic Relationship usage sample - Adding a comment to a category.
+    // Also see PostController >> addPostComment - Adding a comment to a post.
+    public function addCategoryComment(Request $request)
+    {
+        $category = Category::find($request->category_id);
+        $category->comments()->create([
+            'body' => 'This is a comment on a category.',
+        ]);
+    }
 }

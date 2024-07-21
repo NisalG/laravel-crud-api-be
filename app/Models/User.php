@@ -45,4 +45,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function country() // User has one country - for hasManyThrough
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function posts() // User has many posts - for hasManyThrough
+    {
+        return $this->hasMany(Post::class);
+    }
 }

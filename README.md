@@ -1,66 +1,69 @@
 # Laravel 11 Adavanced API BE CRUD
 
-# Advanced Features Included
-- Swagger
-- Docker
-- Testing
+# Advance Features Included
+- **Swagger**
+- **Docker**
+- **Testing**
     - TDD Unit & Feature
     - Mocking External (Third Party) APIs and Services (CoinGecko Cryptocurrency Data API)
-- Service Container and Service Providers
-- Eloquent Techniques
+- **Service Container and Service Providers**
+- **Eloquent Techniques**
     - One-to-One Relationship: 
     - Many-to-Many Relationship
     - Polymorphic Relationship
     - Eager Loading
     - Lazy Loading
-    - Advanced Querying Techniques
+    - Advance Querying Techniques
         - Subqueries
         - Custom Scopes
-    - Advanced Eloquent Techniques
+    - Advance Eloquent Techniques
         - Mutators
         - Accessors
         - Events and Observers
-- API
+- **API**
     - Authentication with Sanctum
     - Versioning
     - Rate Limiting & Throtteling
-    - API Request validation by extending Illuminate\Foundation\Http\FormRequest
-    - API Resource for transforming Responses extending Illuminate\Http\Resources\Json\JsonResource 
-    - Error Handling and Validation
-- "Below sections - Coming in Next Week.................."    
-- Security Best Practices used
+    - API Request validation
+    - API Resource for transforming Responses
+- **Advance Migrations**
+- **Customized Exceptions Handling with Json Responses, Logging and Sentry integration**
+- **Centralized Application Constants**  
+- **Security Best Practices used**
     - Protect Against Common Vulnerabilities
         - Cross-Site Scripting (XSS)
         - Cross-Site Request Forgery (CSRF)
         - SQL Injection
     - Use of Laravel's Built-in Security Features
         - Authentication with Sanctum
+            - Sanctum Token Security
         - Password Hashing
         - Rate Limiting & Throtteling
     - Additional Security Measures
         - HTTPS
         - Environment Configuration
         - Data Encryption
-- Middlewares
+- **Middlewares**
     - Role-Based Access Control Middleware
     - Logging User Activity Middleware
     - Throttle Middleware with Custom Limits
     - Localization Middleware
     - CORS Middleware
-- Scheduling
+- "Below sections - Coming in Next Week.................."  
+- **Scheduling**
     - Scheduling Queued Jobs
     - Scheduling Artisan Commands
-- Caching with Redis
-- Mails 
+- **Caching with Redis**
+- **Mails** 
     - Uses Mailable, Queueable, SerializesModels, Envelope, Content etc.
-- Notifications
+- **Notifications**
     - Events
     - Listeners
     - Queueable
     - ServiceProvider
     - DB tables
-- Event Broadcasting (WebSockets)
-- AWS services
+- **Event Broadcasting (WebSockets)**
+- **AWS services**
     - AWS SDK for PHP
     - File Storage - AWS S3
     - Parameter Store
@@ -68,23 +71,20 @@
     - Elasticbeanstalk Extensions (.ebexensions)
     - SES (To do)
     - SQS (To do)
-- Customized Exceptions Handling with Json Responses, Logging and Sentry integration
-- Centralized Application Constants
-- Migrations and Seeding
 
-# Relevant Artisan commands and Source files for above Advance Features
-- Swagger
+# Guide, Steps, Artisan commands and Source files for above Advance Features
+- **Swagger**
     - Swagger UI library to generate interactive documentation - commands:
         - `npm install swagger-ui-dist`
         - `composer require darkaonline/l5-swagger tymon/jwt-auth`
         - `php artisan vendor:publish --provider=”Tymon\JWTAuth\Providers\LaravelServiceProvider”`
     - Generate the Swagger documentation: `php artisan l5-swagger:generate`
     - Access Swagger API Documentation URL: `http://your-app-url/api/documentation`
-- Docker
+- **Docker**
     - Files:
-        - Dockerfile
-        - docker-compose.yml
-        - docker-compose-sample.yml (another sample file with set of different commands)
+        - `Dockerfile`
+        - `docker-compose.yml`
+        - `docker-compose-sample.yml` (another sample file with set of different commands)
     - Dockerfile commands:
         - `docker build`
         - `docker run`
@@ -101,7 +101,7 @@
         - `docker pull <image_name>`
         - `docker exec -it <container_id> bash` (enter running container)
         - `docker commit <container_id> <new_image_name>` (create new image from container)
-- Unit & Feature Testing (TDD)
+- **Unit & Feature Testing (TDD)**
     - Common commands:
         - Make: `php artisan make:test FaqsTableSeederTest`
         - Run all: `php artisan test`
@@ -111,63 +111,169 @@
         - Check Log files
         - Update phpunit.xml: `<env name="APP_DEBUG" value="true"/>`
         - Create File: `tests/CreatesApplication.php`
-        - Modify the exception handling in your TestCase class to throw exceptions instead of rendering them. See tests\TestCase.php
+        - Modify the exception handling in your TestCase class to throw exceptions instead of rendering them. See `tests\TestCase.php`
     - Post Controller testing:
         - `php artisan make:factory PostFactory --model=Post`
         - Change `database\factories\PostFactory.php`
         - Make sure your Post model uses the HasFactory trait.
         - Test: `php artisan test --filter 'PostControllerTest::it_can_list_all_posts'`
     - Mocking External (Third Party) APIs and Services (CoinGecko Cryptocurrency Data API)
-        - Create a Service for CoinGecko API: app/Services/CoinGeckoService.php
-        - Create a Controller: app/Http/Controllers/CoinGeckoController.php
-        - Define Routes: routes/api.php
+        - Create a Service for CoinGecko API: `app/Services/CoinGeckoService.php`
+        - Create a Controller: `app/Http/Controllers/CoinGeckoController.php`
+        - Define Routes: `routes/api.php`
         - Get Cryptocurrency Data by URL: http://127.0.0.1:8000/api/cryptocurrency/bitcoin
         - Get Market Data by URL: http://127.0.0.1:8000/api/market-data
-        - Create Unit Test Cases for the Service: tests/Unit/CoinGeckoServiceTest.php
-        - Create Feature Test Cases for the Controller: tests/Feature/CoinGeckoControllerTest.php
+        - Create Unit Test Cases for the Service: `tests/Unit/CoinGeckoServiceTest.php`
+        - Create Feature Test Cases for the Controller: `tests/Feature/CoinGeckoControllerTest.php`
         - Run the Tests: `php artisan test` 
-- Service Container and Service Providers
-    - Service Class: app/Services/S3Service.php
+- **Service Container and Service Providers**
+    - Service Class: `app/Services/S3Service.php`
     - Service Provider: 
         - Artisan command: `php artisan make:provider S3ServiceProvider`
-        - File: app/Providers/S3ServiceProvider.php
-    - Register the Service Provider in config/app.php
-    - Use in a Controller: app/Http/Controllers/S3Controller.php
-- Eloquent Techniques
+        - File: `app/Providers/S3ServiceProvider.php`
+    - Register the Service Provider in `config/app.php`
+    - Use in a Controller: `app/Http/Controllers/S3Controller.php`
+- **Eloquent Techniques**
     - One-to-One Relationship:
-        - app\Models\CategoryDetail.php >> category()
-        - app\Models\Category.php >> detail()
-    - Many-to-Many Relationship
-        - app\Models\Tag.php >> posts()
-        - app\Models\Post.php >> tags()
-    - Polymorphic Relationship
-        - app\Models\Comment.php >> commentable()
-        - app\Models\Post.php >> comments()
-        - app\Models\Category.php >> comments()
-    - Eager Loading: app\Http\Controllers\Api\V2\CategoryController.php
-    - Lazy Loading: app\Http\Controllers\Api\V2\CategoryController.php
-    - Advanced Querying Techniques
-        - Subqueries: app\Http\Controllers\Api\V2\CategoryController.php  >> getCategoriesWithPostsCount()
+        - `app\Models\CategoryDetail.php` >> `category()`
+        - `app\Models\Category.php` >> `detail()`
+        - Migration (not required but best practice to maintain relationships also in DB):
+            - `database\migrations\2024_07_20_131424_create_category_details_table.php` >> `$table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');`
+    - One-to-Many Relationship:
+        - `app\Models\Category.php` >> `posts()`
+        - `app\Models\Post.php` >> `category()`
+        - Migration (not required but best practice to maintain relationships also in DB):
+            - `$table->unsignedBigInteger('category_id')->default(1); // 1 = uncategorized - if CSV doesn't have a category, default to uncategorized`
+            `$table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');`
+    - Many-to-Many Relationship - uses a Pivot table
+        - `app\Models\Tag.php` >> `posts()` >> `belongsToMany()`
+        - `app\Models\Post.php` >> `tags()` >> `belongsToMany()`
+        - Migration (required):
+            - Create Pivot table - `post_tag`: `php artisan make:migration create_post_tag_table`
+            - `database\migrations\2024_07_21_050652_create_post_tag_table.php` >> `$table->foreignId('post_id')->constrained()->onDelete('cascade');` 
+            & `$table->foreignId('tag_id')->constrained()->onDelete('cascade');`
+    - Has-Many-Through Relationship: A has-many-through relationship provides a convenient shortcut for accessing distant relations via an intermediate relation. E.g.: a Country has many Posts through a User.
+        - `app\Models\Country.php` >> `posts()` >> `hasManyThrough()`
+        - `app\Models\Post.php` >> `user()` >> `belongsTo()`
+        - `app\Models\User.php`:
+            - `country()` >> `belongsTo()` 
+            - `posts()` >> `hasMany()`
+        - Migration (not required but best practice to maintain relationships also in DB):
+            - Nothing to add for relationship in: `database\migrations\2024_07_21_051334_create_countries_table.php`
+            - `php artisan make:migration add_country_id_to_users_table`
+                - `database\migrations\2024_07_21_052413_add_country_id_to_users_table.php`
+            - `php artisan make:migration add_user_id_to_posts_table`
+                - `database\migrations\2024_07_21_052857_add_user_id_to_posts_table.php`
+    - Polymorphic Relationship: A polymorphic relationship allows a model to belong to more than one other model on a single association. E.g: Suppose both Posts and Categories can have Comments.
+        - `app\Models\Comment.php` >> `commentable()`
+        - `app\Models\Post.php` >> `comments()`
+        - `app\Models\Category.php` >> `comments()`
+        - Migration (not required but best practice to maintain relationships also in DB):
+            - `database\migrations\2024_07_21_033147_create_comments_table.php` >> `$table->morphs('commentable');`. The `morphs()` method creates both `commentable_id` and `commentable_type` columns together.
+        - Usage:
+            - `app\Http\Controllers\Api\V2\CategoryController.php` >> `addCategoryComment()`
+            - `app\Http\Controllers\Api\V2\PostController.php` >> `addCategoryComment()`
+        - Also a sample available in Laravel generated `database\migrations\2024_06_01_083834_create_personal_access_tokens_table.php`
+    - Eager Loading: `app\Http\Controllers\Api\V2\CategoryController.php`
+    - Lazy Loading: `app\Http\Controllers\Api\V2\CategoryController.php`
+    - Advance Querying Techniques
+        - Subqueries: `app\Http\Controllers\Api\V2\CategoryController.php`  >> `getCategoriesWithPostsCount()`
         - Custom Scopes:
-            - Create: app\Models\Post.php >> scopePublished($query)
-            - Usage: app\Http\Controllers\Api\V2\PostController.php >> getPublishedPosts(Request $request)
-    - Advanced Eloquent Techniques
-        - Mutators: app\Models\Post.php >> setTitleAttribute($value)
-        - Accessors: app\Models\Post.php >> getTitleAttribute($value)
+            - Create: `app\Models\Post.php` >> `scopePublished($query)`
+            - Usage: `app\Http\Controllers\Api\V2\PostController.php` >> `getPublishedPosts(Request $request)`
+    - Advance Eloquent Techniques
+        - Mutators: `app\Models\Post.php` >> `setTitleAttribute($value)`
+        - Accessors: `app\Models\Post.php` >> `getTitleAttribute($value)`
         - Events and Observers: Eloquent lifecycle events and observers in Laravel allow you to handle model lifecycle events, keeping your code clean and organized by separating concerns.
             - Eloquent Events: retrieved, creating, created, updating, updated, saving, saved, deleting, deleted, restoring, restored
             - Usage of Eloquent Events: Automatically setting attributes, sending notifications, logging activities, validating data, enforcing business rules
             - Benefits of Using Observers: Separation of concerns, reusability, organization, improved code readability, maintainability, centralized event handling logic
             - Create an Observer: `php artisan make:observer PostObserver --model=Post`
-            - Created file: App\Observers\PostObserver.php
-            - Register the Observer: App\Providers\AppServiceProvider.php
-    - API
-        - Authentication with Sanctum
-        - Versioning
-        - Rate Limiting & Throtteling
-        - API Request validation by extending Illuminate\Foundation\Http\FormRequest
-        - API Resource for transforming Responses extending Illuminate\Http\Resources\Json\JsonResource 
-        - Error Handling and Validation    
+            - Created file: `App\Observers\PostObserver.php`
+            - Register the Observer: `App\Providers\AppServiceProvider.php`
+- **API**
+    - Authentication with Sanctum
+        - Commands:
+            - `composer require laravel/sanctum`
+            - `php artisan cache:clear`
+            - `php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"`
+            - `php artisan migrate`
+        - Model `app/Models/User.php` update to include the `HasApiTokens` trait
+        - Route change: `routes/api.php`
+        - AuthController:
+            - `app\Http\Controllers\Api\V2\AuthController.php` >>  `register()` >> `$user()->createToken()`
+            - `app\Http\Controllers\Api\V2\AuthController.php` >>  `login()` >> `auth()->user()->createToken()`
+        - Client-Side React:
+            - Make API request by passing User email, password to received token
+            - Store the received token securely (e.g., in local storage) and include it in the Authorization header for subsequent authenticated requests
+            - Token Security: Store tokens in cookies with the `HttpOnly` flag and `SameSite` attribute for better security.
+    - Versioning
+        - `app\Providers\RouteServiceProvider.php` >> `boot()`
+        - `routes\api_v1.php`
+        - `routes\api_v2.php`
+        - `app\Http\Controllers\Api\V1\UserController.php`
+        - `app\Http\Controllers\Api\V2\UserController.php`
+        - Add `v1` or `v2` to Postman requests
+    - Rate Limiting & Throtteling
+        - `app\Providers\RouteServiceProvider.php`
+        - `routes\api_v1.php`
+        - Test it by setting ‘1’ to `app\Providers\RouteServiceProvider.php` >> `configureRateLimiting()` >> `Limit::perMinute(1)`
+        - When accessed on Postman it will get `“429: Too Many Attempts.”`
+    - API Request validation
+        - By using Request validation, you don't need to use Validator class to validate in Controller Actions
+        - `php artisan make:request CreateUserRequest`
+            - `app\Http\Requests\CreateUserRequest.php` will be created extending `Illuminate\Foundation\Http\FormRequest`
+        - Add validation rules to: `app\Http\Requests\CreateUserRequest.php` >> `rules()`
+        - Use the CreateUserRequest in `app\Http\Controllers\Api\V2\UserController.php`
+            - E.g.: `public function store(CreateUserRequest $request)`
+    - API Resource for transforming Models into JSON responses.
+        - `php artisan make:resource PostResource`
+            - `app\Http\Resources\PostResource.php` will be created extending  `Illuminate\Http\Resources\Json\JsonResource`
+        - Add fields to transform in `app\Http\Resources\PostResource.php` >> `toArray()`
+        - Use the PostResource in `app\Http\Controllers\Api\V2\PostController.php`
+            - E.g.1: `PostResource::collection($posts)`
+            - E.g.2: `new PostResource($post)`
+- **Advance Migrations**
+    - Defining Relationships in Migrations 
+        - It is not compulsory, but a good practice and try to do always. See above "Eloquent Techniques" relationships. 
+            - Benifits (When to Use): Defining relationships in migrations ensures data integrity, enables automatic cascading of related records, provides clear schema documentation, and allows for complete and clean rollbacks of the database schema, making it easier for new developers to understand the database structure.
+            - When NOT to Use Database Relationships in Migrations: Avoid defining database relationships in migrations for legacy databases (to prevent issues with existing data), high-throughput applications (to reduce overhead),  and specialized use cases (where constraints might be unnecessary or counterproductive).
+    - Files related:
+        - `database\migrations\2024_07_20_131414_create_categories_table.php`
+        - `database\migrations\2024_07_20_131424_create_category_details_table.php`
+    - Foreign Key Constrains: (See these got created in `MySQL WorkBench` > `Alter Table` > `Foreign Keys`)
+        - Short method to define Constrains: Using `foreignId()`, `constrained()`, `cascadeOnDelete()` etc.
+        - Long method to define Constrains: Using `foreign()`, `references()`, `on()` etc.
+        - Droping FK with `down()` >> `dropForeign()` - Use it carefully to avoid compromising data integrity and handle potential orphaned data.
+            - `database\migrations\2024_07_21_052413_add_country_id_to_users_table.php` >> `down()`
+    - Delete Cascade with `onDelete('cascade')` & `cascadeOnDelete()`
+    - Update Cascade with `onUpdate('cascade')`
+    - Indexing (See these got created in `MySQL WorkBench` > `Alter Table` > `Indexes`)
+        - Benefits of Indexing: 
+            - Improved performance for queries that involve filtering or sorting on indexed columns.
+            - Faster data retrieval by allowing the database to efficiently locate relevant records.
+        - `index()` 
+            - `index([])` - Creates indexes for given column names
+            - `index(,)` - Creates index for the given colmn with given custom index name
+        - `unique()` - Enforces unique values across indexed column
+        - `fullTextIndex()` & `fullText()` - For full-text search capabilities on text columns
+            - `fullText()` - to mark a column as searchable within Laravel's Eloquent queries.
+            - `fullTextIndex()` - to create a dedicated full-text index for optimal search performance on large datasets.
+    - Soft Deletes with `deleted_at` in ``
+        - `up()` >> `softDeletes()`
+        - `down()` >> `dropSoftDeletes()`
+    - `id()`, `increment()` & `bigIncrements()`
+        - `id()` - Laravel 8+: creates an auto-incrementing primary key column named `id`. It chooses the right data type (often `BIGINT`) based on your database.
+        - `increment()` - Old method before Laravel 8 to do above with `INT`
+        - `bigIncrements()` -  - Old method before Laravel 8 to do above with `BIGINT`
+    - `unsignedBigInteger()`: Foreign Keys: When creating a column to reference another table's primary key (often `id`), you'll typically use `unsignedBigInteger()`. This ensures sufficient storage and avoids negative values for foreign key references. E.g.: `database\migrations\2024_05_30_102005_create_posts_table.php` >> `$table->unsignedBigInteger('category_id')->nullable();`
+    - morphs() - Used in Polypolymorphic relationship. See above "Eloquent Techniques" relationships.
+
+- **Customized Exceptions Handling with Json Responses, Logging and Sentry integration**
+- **Centralized Application Constants**
+- **Security Best Practices used** - copy paste whats in gdoc > Security Best Practices. Add to code.
+- **Middlewares**
+
 - "Other sections - Coming in Next Week.................."
 
 # How to run the application 
@@ -180,7 +286,7 @@
 - Access Swagger API Documentation URL: `http://your-app-url/api/documentation`
 
 
-##########################################################################################################
+######################################################################################
 #
 #
 # Larevl Default

@@ -29,8 +29,8 @@ return new class extends Migration
             $table->string('share_image_size')->nullable();
             $table->string('share_image_alt')->nullable();
             $table->string('video_url')->nullable();
-            $table->unsignedBigInteger('category_id')->nullable();
-            // $table->foreign('category_id')->references('id')->on('categories');
+            $table->unsignedBigInteger('category_id')->default(1); // 1 = uncategorized - if CSV doesn't have a category, default to uncategorized
+            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
             $table->boolean('published')->default(false);
             $table->dateTime('published_at');
             $table->timestamps();

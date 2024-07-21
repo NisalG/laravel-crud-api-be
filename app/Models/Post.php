@@ -14,6 +14,7 @@ class Post extends Model
         'slug',
         'content',
         'category_id',
+        'user_id',
         'published_at',
     ];
 
@@ -47,5 +48,10 @@ class Post extends Model
     public function getTitleAttribute($value)
     {
         return strtoupper($value);
+    }
+
+    public function user() // belongsTo relationship - for hasManyThrough
+    {
+        return $this->belongsTo(User::class);
     }
 }

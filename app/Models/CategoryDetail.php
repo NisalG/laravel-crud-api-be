@@ -14,7 +14,7 @@ class CategoryDetail extends Model
         'description',
     ];
 
-    public function category()
+    public function category() //one-to-one
     {
         return $this->belongsTo(Category::class);
     }

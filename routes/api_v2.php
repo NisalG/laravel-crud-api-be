@@ -27,7 +27,10 @@ Route::group(['prefix' => 'posts', 'middleware' => 'auth:sanctum'], function () 
     Route::get('/answers', [PostController::class, 'getAnswers']);
 });
 
-Route::get('/users', [UserController::class, 'index']); //Users to check if API V1 works
+Route::prefix('v2')->group(function () {
+    Route::get('/users', [UserController::class, 'index']);//Users to check if API V2 works
+    Route::post('/users', [UserController::class, 'store']);
+});
 
 Route::get('cryptocurrency/{id}', [CoinGeckoController::class, 'getCryptocurrencyData']);
 Route::get('market-data', [CoinGeckoController::class, 'getMarketData']);
