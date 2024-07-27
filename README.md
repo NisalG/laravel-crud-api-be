@@ -66,7 +66,36 @@
 - **AWS services**
     - AWS SDK for PHP
     - File Storage - AWS S3
-    - Parameter Store
+    - Parameter Store: 
+        - AWS Parameter Store Encryption
+        AWS Parameter Store supports two types of parameters: Standard and SecureString. SecureString parameters are encrypted at rest using a customer-managed AWS Key Management Service (KMS) key. When you store a parameter as a SecureString, AWS handles the encryption and decryption processes for you. AWS enforces strict IAM policies, and auditing access.
+        - Install AWS SDK for PHP: `composer require aws/aws-sdk-php`
+        - Retrieve the Parameter:
+        ``` use Aws\Ssm\SsmClient;
+
+            $ssm = new SsmClient([
+                'version' => 'latest',
+                'region'  => 'your-region',
+                'credentials' => [
+                    'key'    => 'your-aws-access-key',
+                    'secret' => 'your-aws-secret-key',
+                ],
+            ]);
+
+            $result = $ssm->getParameter([
+                'Name' => 'API_KEY',
+                'WithDecryption' => true,
+            ]);
+
+            $apiKey = $result['Parameter']['Value'];
+        ```
+        - Set the Environment Variable during Deployment in YML files:
+        ``` option_settings:
+                aws:elasticbeanstalk:application:environment:
+                API_KEY: "the-api-key"
+        ```
+        - Access the API Key:
+            `$apiKey = env('API_KEY');`
     - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used)
     - Elasticbeanstalk Extensions (.ebexensions)
     - SES (To do)
@@ -329,23 +358,86 @@
         - Throttle Requests: Use Laravel’s rate limiting to protect application from Brute-Force Attacks.
             - `routes\api_v1.php` >> `Route::middleware('throttle:api').....`
     - Additional Security Measures
-        - Force HTTPS by setting forceScheme in the AppServiceProvider:
-            `use Illuminate\Support\Facades\URL;`
-            `public function boot()`
-            `{`
-                `if (env('APP_ENV') !== 'local') {`
-                    `URL::forceScheme('https');`
-                `}`
-            `}`
+        - Force HTTPS
+            - Web Server Configuration: Make sure the web server (e.g., Apache, Nginx) is configured to use HTTPS and redirect HTTP requests to HTTPS.
+            - Ensure the correct environment set in .env: `APP_ENV=production`
+            - Set forceScheme in the `app/Providers/AppServiceProvider.php` >> `boot()`
         - Environment Configuration
             Secure .env file by not exposed to the public and sensitive information like database credentials and API keys are kept secure. See AWS Parameter Store implementation below.
         - Encrypt Sensitive Data: Use Laravel’s encryption to store sensitive data securely.
-            `use Illuminate\Support\Facades\Crypt;`
-            `$encrypted = Crypt::encryptString('sensitive data');`
-            `$decrypted = Crypt::decryptString($encrypted);`
-        - Content Security Policy (CSP): Implement CSP: Use a content security policy to mitigate XSS attacks by defining which sources are allowed to load content on your site.
+            - What should be encrypted:
+                - Personal Identifiable Information (PII): Social Security Numbers (SSN), Driver's License Numbers, Passport Numbers, National Identification Numbers
+
+                - Financial Information: Credit Card Numbers, Bank Account Numbers, Credit Reports, Tax Information
+
+                - Authentication Credentials: Passwords (typically hashed rather than encrypted, but still considered sensitive), Security Questions and Answers, Authentication Tokens
+
+                - Health Information: Medical Records, Health Insurance Information, Prescription Information, Patient History
+
+                - Contact Information: Email Addresses, Phone Numbers, Home Addresses
+
+                - Business Information: Trade Secrets, Proprietary Formulas, Strategic Plans, Internal Communications
+
+                - Communication Data: Chat Logs, Emails, Text Messages
+
+                - Biometric Data: Fingerprints, Facial Recognition Data, Iris Scans, Voice Recognition Data
+
+                - Legal Information: Legal Contracts, Court Orders, Legal Agreements
+
+                - Intellectual Property: Source Code, Design Documents, Patents
+
+                - Sensitive Configuration Data: API Keys, Access Tokens, Encryption Keys, Database Credentials
+            - Example 1: Using encrypted keys using AWS ParameterStore >> `SecureString` type parameters. But this doesn't use Laravel `Illuminate\Support\Facades\Crypt`
+            - Example 2: Encrypting & Decrypting Sensitive Data (e.g.: user SSN)
+                `app\Http\Controllers\Api\V2\UserController.php` >> `store()` & `show()`
+        - Content Security Policy (CSP): Implement CSP: Use a content security policy to mitigate XSS attacks by defining which sources are allowed to load content on the webapplication.
 
 - **Middlewares**
+    - Deafult (already available and non-custom middlewares)
+        - Sanctum Auth Middleware:
+            - `routes\api_v2.php` >> `middleware('auth:sanctum')` && `'middleware' => 'auth:sanctum'`
+            - `\config\sanctum.php`
+        - Route Middleware for `api` & `web`: 
+            - `app\Providers\RouteServiceProvider.php` >> `Route::middleware('api')` & `Route::middleware('web')`
+        - Throttle Middleware with Custom Limits (See API throtteling section):
+            - `routes\api_v1.php` >> `Route::middleware('throttle:api')`
+        - CORS Middleware
+        - Verify CSRF Token Middleware
+    - Custom middlewares (Created using Artisan commands and will be created inside `app/Http/Middleware` folder)
+        - Steps:
+            - `php artisan make:middleware MyMiddleware`
+            - File will be created: `app/Http/Middleware/MyMiddleware.php`
+            - Register the middleware (no Kernel.php in Laravel 11) in: `bootstrap\app.php` >> `Application::configure()` >> `withMiddleware()`
+            - Use midlware in route files: `routes\api_v2.php` >> `middleware()`
+            - Use routes without a certain middlware in a route group: `withoutMiddleware()`
+        - Role-Based Access Control Middleware:
+            - `php artisan make:middleware RoleManagement` creates `app/Http/Middleware/RoleManagement.php`
+            - Testing route in: `routes\api_v2.php`
+            - Example Postman Request: [GET] http://127.0.0.1:8000/api/v2/admin
+                - Headers: Key: Authorization | Value: Bearer <Auth Token>
+                - Response:
+                    - If the user is an admin: "Admin Area" [200]
+                    - If the user is not an admin: [403] "message": "Unauthorized"
+        - Logging User Activity Middleware:
+            - `php artisan make:middleware LogUserActivity` creates `app\Http\Middleware\LogUserActivity.php`
+            - Testing route in: `routes\api_v2.php`
+            - Example Postman Request: [GET] http://127.0.0.1:8000/api/v2/profile
+                - Headers: Key: Authorization | Value: Bearer <Auth Token>
+                - Response: "User Profile" [200]
+                - Check Laravel log files for the log entry
+        - Localization Middleware - with usage a middleware in route groups using `group()`:
+            - `php artisan make:middleware Localization` creates `app\Http\Middleware\Localization.php`
+            - Testing route in: `routes\api_v2.php`
+            - Example Postman Request: 
+                - Setting:
+                    - [POST] http://127.0.0.1:8000/api/v2/set-locale?locale=es
+                    - Response: "message" : "Set Locale" [200]
+                    - Set application locale to `es`
+                - Getting:
+                    - [GET] http://127.0.0.1:8000/api/v2/current-locale
+                    - Response: "locale": "es" [200]
+                    - Ensure the application locale is set to `es`
+
 
 - "Other sections - Coming in Next Week.................."
 
