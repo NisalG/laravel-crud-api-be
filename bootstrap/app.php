@@ -5,8 +5,12 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 
-// use App\Exceptions\Handler;
+use App\Exceptions\Handler;
 use App\Exceptions\CustomExceptionHandler;
+
+use App\Http\Middleware\RoleManagement;
+use App\Http\Middleware\LogUserActivity;
+use App\Http\Middleware\Localization;
 
 $app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,16 +19,44 @@ $app = Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
-    })
+        /**Customizes the CSRF token validation middleware. 
+         * It specifies that CSRF token validation should be applied to all routes 
+         * except those that match the pattern stripe/*.*/
+        $middleware->validateCsrfTokens(
+            except: ['stripe/*']
+        );
+
+        // Registering custom middlewares - Without an alias
+        $middleware->append(RoleManagement::class);
+        $middleware->append(LogUserActivity::class);
+
+        // Registering custom middlewares - With an alias and grouping
+        $middleware->alias([
+            'localize' => Localization::class
+        ]);
+    })   
+    // Register the custom exception handler - Laravel 11 method
     ->withExceptions(function (Exceptions $exceptions) {
-        // Register the custom exception handler
-
+        return [
+            App\Exceptions\EntityNotFoundException::class => function ($e, $request) {
+                return response()->json(['message' => 'Entity not found'], 404);
+            },
+            App\Exceptions\ValidationException::class => function ($e, $request) {
+                return response()->json(['errors' => $e->errors()], 422);
+            },
+            App\Exceptions\AuthorizationException::class => function ($e, $request) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            },
+            App\Exceptions\DatabaseException::class => function ($e, $request) {
+                return response()->json(['message' => 'Database error'], 500);
+            },
+        ];
     })->create();
-
-$app->singleton(
-    ExceptionHandler::class,
-    CustomExceptionHandler::class
-);
+    
+// Laravel 10 method
+// $app->singleton(
+//     ExceptionHandler::class,
+//     CustomExceptionHandler::class
+// );
 
 return $app;

@@ -70,6 +70,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'country_id' => 1
         ]);
 
         // Generate API token for the newly registered user (optional)
@@ -127,7 +128,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         try {
-            $validator = dddValidator::make($request->all(), [
+            $validator = Validator::make($request->all(), [
                 'email' => 'required|string|email',
                 'password' => 'required|string',
             ]);
@@ -154,7 +155,6 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // $user = Auth::user();
         $user = $request->user();
         if ($user) {
             $user->tokens()->delete(); // Revoke all tokens for the user

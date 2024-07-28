@@ -16,9 +16,12 @@ class RoleManagement
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        if (!Auth::check() || !in_array(Auth::user()->role, $roles)) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        // dump('Auth::guard(\'sanctum\')->guest()', Auth::guard('sanctum')->guest());
+        // dd(auth('sanctum')->user()->name);
+        // This will work when Authorization is not developed and role is set for each user
+        // if (Auth::guard('sanctum')->guest() || !in_array(auth('sanctum')->user()->role, $roles)) {
+        //     return response()->json(['message' => 'Unauthorized'], 403);
+        // }
 
         return $next($request);
     }

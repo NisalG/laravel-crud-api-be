@@ -49,10 +49,12 @@
     - Throttle Middleware with Custom Limits
     - Localization Middleware
     - CORS Middleware
-- "Below sections - Coming in Next Week.................."  
 - **Scheduling**
     - Scheduling Queued Jobs
     - Scheduling Artisan Commands
+
+- "Below sections - Coming in Next Week.................."  
+
 - **Caching with Redis**
 - **Mails** 
     - Uses Mailable, Queueable, SerializesModels, Envelope, Content etc.
@@ -299,21 +301,43 @@
     - morphs() - Used in Polypolymorphic relationship. See above "Eloquent Techniques" relationships.
 
 - **Customized Exceptions Handling with Json Responses, Logging and Sentry integration**
-    - `php artisan make:exception CustomExceptionHandler`
-        - File will be created: `app\Exceptions\CustomExceptionHandler.php`
-    - Binding the Custom Exception Handler to the service container in `bootstrap\app.php`
-    - Testing the Custom Exception Handler: 
-        - Make some change like a change in class name in `app\Http\Controllers\Api\V2\AuthController.php` to make the process go into `catch` and throw an exception
-        - Access the Login route on Postman: http://127.0.0.1:8000/api/v2/login 
-        - Response will be: `"message": "A custom exception occurred:....`
-        - If you remove the service container registration of `CustomExceptionHandler` from `bootstrap\app.php` >> `singleton()` the response will be the Laravel default exception `"message": "Class \"App\\Http\\Controllers\\Api\\V2\\DDDValidator\" not found.....",` etc.
-    - Laravel logs will be updated with Logs added in `CustomExceptionHandler` >> `report()` & `render()` methods
-    - Sentry integration:
-        - Install Sentry Laravel SDK: `composer require sentry/sentry-laravel`
-        - Publish the Sentry Configuration File: `php artisan vendor:publish --provider="Sentry\Laravel\ServiceProvider"`
-        - Configure Sentry in `config/sentry.php`
-        - Add Sentry DSN to Environment File: `.env` >> `SENTRY_LARAVEL_DSN=https://your-dsn@sentry.io/project-id`
-        - Add Sentry logging to `app\Exceptions\CustomExceptionHandler.php` >> `report()` 
+    - Previous Method with `Laravel 10`
+        - `php artisan make:exception CustomExceptionHandler`
+            - File will be created: `app\Exceptions\CustomExceptionHandler.php`
+        - `report()` method: This method allows to handle logging or reporting of the exceptions. This method is called automatically before the render() method and is useful for logging errors or sending notifications to external services (like Sentry, Bugsnag, etc.).
+        - `render()` method: This method is called automatically when the exception is thrown, and it customizes the error JSON response that the user receives.
+        - Binding the Custom Exception Handler to the service container in `bootstrap\app.php`
+        - Testing the Custom Exception Handler: 
+            - Make some change like a change in class name in `app\Http\Controllers\Api\V2\AuthController.php` to make the process go into `catch` and throw an exception
+            - Access the Login route on Postman: http://127.0.0.1:8000/api/v2/login 
+            - Response will be: `"message": "A custom exception occurred:....`
+            - If you remove the service container registration of `CustomExceptionHandler` from `bootstrap\app.php` >> `singleton()` the response will be the Laravel default exception `"message": "Class \"App\\Http\\Controllers\\Api\\V2\\DDDValidator\" not found.....",` etc.
+        - Laravel logs will be updated with Logs added in `CustomExceptionHandler` >> `report()` & `render()` methods
+        - Sentry integration:
+            - Install Sentry Laravel SDK: `composer require sentry/sentry-laravel`
+            - Publish the Sentry Configuration File: `php artisan vendor:publish --provider="Sentry\Laravel\ServiceProvider"`
+            - Configure Sentry in `config/sentry.php`
+            - Add Sentry DSN to Environment File: `.env` >> `SENTRY_LARAVEL_DSN=https://your-dsn@sentry.io/project-id`
+            - Add Sentry logging to `app\Exceptions\CustomExceptionHandler.php` >> `report()` 
+
+    - New Method with `Laravel 11`
+        - Create 4 Custom Exceptions:
+            `php artisan make:exception EntityNotFoundException` - file get created: `app\Exceptions\EntityNotFoundException.php`
+            `php artisan make:exception ValidationException` - file get created: `app\Exceptions\ValidationException.php`
+            `php artisan make:exception AuthorizationException` - file get created: `app\Exceptions\AuthorizationException.php`
+            `php artisan make:exception DatabaseException` - file get created: `app\Exceptions\DatabaseException.php`
+        - Add relevant codes into above files
+        - `report()` method: This method allows to handle logging or reporting of the exceptions. This method is called automatically before the render() method and is useful for logging errors or sending notifications to external services (like Sentry, Bugsnag, etc.).
+        - `render()` method: This method is called automatically when the exception is thrown, and it customizes the error JSON response that the user receives.
+        - Register & Configure Custom Exception Handling in `bootstrap/app.php` >> `Application::configure` >> `withExceptions`
+        - Use above 4 custom exceptions in `app\Http\Controllers\Api\V2\CategoryController.php`
+        - Add relevant routes in `routes\api_v2.php`
+        - Testing on Postman:
+            - `http://127.0.0.1:8000/api/v2/categories`
+            - `http://127.0.0.1:8000/api/v2/categories/1`
+            - `http://127.0.0.1:8000/api/v2/categories/222`
+            - `render()` method will give the proper customized exception message as response
+            - `report()` method will log the proper customized exception message to laravel.log
 - **Centralized Application Constants**
     - Benefits:
         - Centralized Configuration: Centralizes configuration values, making it easier to manage and update them in one place.
@@ -393,7 +417,8 @@
         - Content Security Policy (CSP): Implement CSP: Use a content security policy to mitigate XSS attacks by defining which sources are allowed to load content on the webapplication.
 
 - **Middlewares**
-    - Deafult (already available and non-custom middlewares)
+    - Previously, new Laravel applications included nine middleware for tasks like authenticating requests, trimming input strings, and validating CSRF tokens. In Laravel 11, these middleware are now part of the framework itself, reducing the application's bulk. Customization of these middleware can be done through new methods in the framework, which can be invoked from your application's `bootstrap/app.php` file. There's no registering in `kernel.php` in Laravel 11 since that file is not available.
+    - Deafult (already available and non-custom middlewares). Can be invoked and configured in `bootstrap/app.php` >> `withMiddleware()` 
         - Sanctum Auth Middleware:
             - `routes\api_v2.php` >> `middleware('auth:sanctum')` && `'middleware' => 'auth:sanctum'`
             - `\config\sanctum.php`
@@ -403,16 +428,18 @@
             - `routes\api_v1.php` >> `Route::middleware('throttle:api')`
         - CORS Middleware
         - Verify CSRF Token Middleware
+            - Invoked and configured in `bootstrap/app.php` >> `withMiddleware()`  >> `$middleware->validateCsrfTokens()`
     - Custom middlewares (Created using Artisan commands and will be created inside `app/Http/Middleware` folder)
         - Steps:
             - `php artisan make:middleware MyMiddleware`
             - File will be created: `app/Http/Middleware/MyMiddleware.php`
             - Register the middleware (no Kernel.php in Laravel 11) in: `bootstrap\app.php` >> `Application::configure()` >> `withMiddleware()`
-            - Use midlware in route files: `routes\api_v2.php` >> `middleware()`
+            - Use middlware in route files: `routes\api_v2.php` >> `middleware()`
             - Use routes without a certain middlware in a route group: `withoutMiddleware()`
         - Role-Based Access Control Middleware:
             - `php artisan make:middleware RoleManagement` creates `app/Http/Middleware/RoleManagement.php`
-            - Testing route in: `routes\api_v2.php`
+            - Register the middleware (no Kernel.php in Laravel 11) in: `bootstrap\app.php` >> `Application::configure()` >> `withMiddleware()` >> `prepend()`
+            - Using/Testing route in: `routes\api_v2.php`
             - Example Postman Request: [GET] http://127.0.0.1:8000/api/v2/admin
                 - Headers: Key: Authorization | Value: Bearer <Auth Token>
                 - Response:
@@ -420,14 +447,15 @@
                     - If the user is not an admin: [403] "message": "Unauthorized"
         - Logging User Activity Middleware:
             - `php artisan make:middleware LogUserActivity` creates `app\Http\Middleware\LogUserActivity.php`
-            - Testing route in: `routes\api_v2.php`
+            - Register the middleware (no Kernel.php in Laravel 11) in: `bootstrap\app.php` >> `Application::configure()` >> `withMiddleware()` >> `prepend()`
+            - Using/Testing route in: `routes\api_v2.php`
             - Example Postman Request: [GET] http://127.0.0.1:8000/api/v2/profile
                 - Headers: Key: Authorization | Value: Bearer <Auth Token>
                 - Response: "User Profile" [200]
                 - Check Laravel log files for the log entry
         - Localization Middleware - with usage a middleware in route groups using `group()`:
             - `php artisan make:middleware Localization` creates `app\Http\Middleware\Localization.php`
-            - Testing route in: `routes\api_v2.php`
+            - Using/Testing route in: `routes\api_v2.php`
             - Example Postman Request: 
                 - Setting:
                     - [POST] http://127.0.0.1:8000/api/v2/set-locale?locale=es

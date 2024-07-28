@@ -18,7 +18,9 @@ class Localization
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = $request->get('locale', Auth::check() ? Auth::user()->locale : config('app.locale'));
+        dump('auth(\'sanctum\')->check()',  auth('sanctum')->check());
+        dd(auth('sanctum')->user()->locale);
+        $locale = $request->get('locale', auth('sanctum')->check() ? auth('sanctum')->user()->locale : config('app.locale'));
         App::setLocale($locale);
 
         return $next($request);

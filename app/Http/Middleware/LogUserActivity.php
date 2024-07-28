@@ -17,7 +17,7 @@ class LogUserActivity
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = Auth::user();
+        $user = auth('sanctum')->user();
         $action = $request->method() . ' ' . $request->path();
         Log::info('Log from middleware - User activity', ['user_id' => $user ? $user->id : null, 'action' => $action]);
 
