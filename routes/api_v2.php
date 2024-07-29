@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\V2\AuthController;
 use App\Http\Controllers\Api\V2\PostController;
 use App\Http\Controllers\Api\V2\UserController;
 use App\Http\Controllers\Api\V2\CategoryController;
-
+use App\Http\Controllers\Api\V2\AWSController;
 use App\Http\Controllers\Api\V2\CoinGeckoController;
 use Illuminate\Support\Facades\App;
 
@@ -71,3 +71,9 @@ Route::middleware(['localize'])->group(function () {
         return response()->json(['locale' => App::getLocale()]);
     });
 });
+// Route for AWS SES Email Testing
+Route::post('/send-email', [AWSController::class, 'sendTestSESEmail']);
+
+// Route for AWS SQS Queue Testing
+Route::post('/send-message', [AWSController::class, 'sendSQSMessage']);
+Route::post('/receive-messages', [AWSController::class, 'receiveSQSMessages']);

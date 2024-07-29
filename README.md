@@ -1,12 +1,36 @@
 # Laravel 11 Adavanced API BE CRUD
 
+# Laravel 11 Changes
+- Bootstrap file `bootstrap/app.php` as central configuration point	
+- Reduced default service providers from five to one AppServiceProvider (`app\Providers\AppServiceProvider.php` file)	
+- Event discovery and route model bindings enabled by default: 
+    - Laravel automatically finds and registers events and their listeners.
+    - Manual registration is still possible in the AppServiceProvider.
+    - Route model bindings and authorization gates can also be registered in the AppServiceProvider.
+- Optional API and broadcast routing :
+    - The api.php and channels.php route files are no longer present by default, as many applications do not require these files.
+    - Can be created with Artisan commands
+- Middleware integrated into the framework, customizable in bootstrap file `bootstrap/app.php`	
+- Removal of HTTP kernel class (`src\app\Http\Kernel.php` file)	
+- Scheduled tasks defined directly in console routes file `routes/console.php` (`src\app\Console\Kernel.php` file removed)	
+- Exception handling configured in bootstrap file `bootstrap/app.php`	
+- Simplified base controller class (`app\Http\Controllers\Controller.php` file)
+- Default database storage: SQLite	
+- Database drivers for session, cache, and queue by default
+
+---
+
 # Advance Features Included (Please check below for detailed guide)
 - **Swagger**
+
 - **Docker**
-- **Testing**
+
+- **Unit & Feature Testing (TDD)**
     - TDD Unit & Feature
     - Mocking External (Third Party) APIs and Services (CoinGecko Cryptocurrency Data API)
+
 - **Service Container and Service Providers**
+
 - **Eloquent Techniques**
     - One-to-One Relationship: 
     - Many-to-Many Relationship
@@ -20,15 +44,20 @@
         - Mutators
         - Accessors
         - Events and Observers
+
 - **API**
     - Authentication with Sanctum
     - Versioning
     - Rate Limiting & Throtteling
     - API Request validation
     - API Resource for transforming Responses
+
 - **Advance Migrations**
+
 - **Customized Exceptions Handling with Json Responses, Logging and Sentry integration**
+
 - **Centralized Application Constants**  
+
 - **Security Best Practices used**
     - Protect Against Common Vulnerabilities
         - Cross-Site Scripting (XSS)
@@ -43,67 +72,49 @@
         - HTTPS
         - Environment Configuration
         - Data Encryption
+
 - **Middlewares**
     - Role-Based Access Control Middleware
     - Logging User Activity Middleware
     - Throttle Middleware with Custom Limits
     - Localization Middleware
     - CORS Middleware
+
+- **AWS services**
+    - AWS SDK for PHP
+    - File Storage - AWS S3
+    - Parameter Store
+    - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used) - see below *CI/CD Implementation* section.
+    - Elasticbeanstalk Extensions (.ebexensions) - see below *CI/CD Implementation* section.
+    - SES (To do)
+    - SQS (To do)
+
+- **CI/CD Implementation**
+    - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used)
+    - Elasticbeanstalk Extensions (.ebexensions)
+
 - **Scheduling**
     - Scheduling Queued Jobs
     - Scheduling Artisan Commands
 
-- "Below sections - Coming in Next Week.................."  
+- **Caching with Redis** - ToDo
 
-- **Caching with Redis**
-- **Mails** 
+- **Mails** - ToDo
     - Uses Mailable, Queueable, SerializesModels, Envelope, Content etc.
-- **Notifications**
+    - AWS SES: See AWS SES section
+
+- **Notifications** - ToDo
     - Events
     - Listeners
     - Queueable
     - ServiceProvider
     - DB tables
-- **Event Broadcasting (WebSockets)**
-- **AWS services**
-    - AWS SDK for PHP
-    - File Storage - AWS S3
-    - Parameter Store: 
-        - AWS Parameter Store Encryption
-        AWS Parameter Store supports two types of parameters: Standard and SecureString. SecureString parameters are encrypted at rest using a customer-managed AWS Key Management Service (KMS) key. When you store a parameter as a SecureString, AWS handles the encryption and decryption processes for you. AWS enforces strict IAM policies, and auditing access.
-        - Install AWS SDK for PHP: `composer require aws/aws-sdk-php`
-        - Retrieve the Parameter:
-        ``` use Aws\Ssm\SsmClient;
 
-            $ssm = new SsmClient([
-                'version' => 'latest',
-                'region'  => 'your-region',
-                'credentials' => [
-                    'key'    => 'your-aws-access-key',
-                    'secret' => 'your-aws-secret-key',
-                ],
-            ]);
+- **Event Broadcasting (WebSockets)** - ToDo
 
-            $result = $ssm->getParameter([
-                'Name' => 'API_KEY',
-                'WithDecryption' => true,
-            ]);
+---
 
-            $apiKey = $result['Parameter']['Value'];
-        ```
-        - Set the Environment Variable during Deployment in YML files:
-        ``` option_settings:
-                aws:elasticbeanstalk:application:environment:
-                API_KEY: "the-api-key"
-        ```
-        - Access the API Key:
-            `$apiKey = env('API_KEY');`
-    - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used)
-    - Elasticbeanstalk Extensions (.ebexensions)
-    - SES (To do)
-    - SQS (To do)
-
-# Guide, Steps, Artisan commands and Source files for above Advance Features
+# Advance Features Explained: Guides, Steps, Artisan Commands and Source Files for above Advance Features
 - **Swagger**
     - Swagger UI library to generate interactive documentation - commands:
         - `npm install swagger-ui-dist`
@@ -142,11 +153,11 @@
         - Check Log files
         - Update phpunit.xml: `<env name="APP_DEBUG" value="true"/>`
         - Create File: `tests/CreatesApplication.php`
-        - Modify the exception handling in your TestCase class to throw exceptions instead of rendering them. See `tests\TestCase.php`
+        - Modify the exception handling in the TestCase class to throw exceptions instead of rendering them. See `tests\TestCase.php`
     - Post Controller testing:
         - `php artisan make:factory PostFactory --model=Post`
         - Change `database\factories\PostFactory.php`
-        - Make sure your Post model uses the HasFactory trait.
+        - Make sure the Post model uses the HasFactory trait.
         - Test: `php artisan test --filter 'PostControllerTest::it_can_list_all_posts'`
     - Mocking External (Third Party) APIs and Services (CoinGecko Cryptocurrency Data API)
         - Create a Service for CoinGecko API: `app/Services/CoinGeckoService.php`
@@ -158,12 +169,12 @@
         - Create Feature Test Cases for the Controller: `tests/Feature/CoinGeckoControllerTest.php`
         - Run the Tests: `php artisan test` 
 - **Service Container and Service Providers**
-    - Service Class: `app/Services/S3Service.php`
+    - Service Class: `app/Services/AWSService.php`
     - Service Provider: 
-        - Artisan command: `php artisan make:provider S3ServiceProvider`
-        - File: `app/Providers/S3ServiceProvider.php`
+        - Artisan command: `php artisan make:provider AWSServiceProvider`
+        - File: `app/Providers/AWSServiceProvider.php`
     - Register the Service Provider in `config/app.php`
-    - Use in a Controller: `app/Http/Controllers/S3Controller.php`
+    - Use in a Controller: `app/Http/Controllers/AWSController.php`
 - **Eloquent Techniques**
     - One-to-One Relationship:
         - `app\Models\CategoryDetail.php` >> `category()`
@@ -466,8 +477,133 @@
                     - Response: "locale": "es" [200]
                     - Ensure the application locale is set to `es`
 
+- **AWS services**
+    - Install the AWS SDK for PHP: `composer require aws/aws-sdk-php`
+    - File Storage - AWS S3
+        - Servic class: `app\Services\AWSService.php`
+        - Service Provider: `app\Providers\AWSServiceProvider.php`
+            - Register in register()
+            - Ensure AWSService is available from the start of your application and environment variables are set up immediately by resloving in boot()
+        - Register the Service Provider in: `config\app.php`
+        - Usage in: `app\Http\Controllers\Api\V2\AWSController.php`
+    - Parameter Store: 
+        - AWS Parameter Store Encryption
+        AWS Parameter Store supports two types of parameters: Standard and SecureString. SecureString parameters are encrypted at rest using a customer-managed AWS Key Management Service (KMS) key. When you store a parameter as a SecureString, AWS handles the encryption and decryption processes for you. AWS enforces strict IAM policies, and auditing access.
+        - Retrieve the Parameter:
+            - Single: `app\Services\AWSService.php` >> `getSSMParameter()`
+            - Get all and assign to environment variables: `app\Services\AWSService.php` >> `setEnvironmentVariables()`
+            - Service Provider: `app\Providers\AWSServiceProvider.php`
+                - Register in register()
+                - Ensure AWSService is available from the start of your application and environment variables are set up immediately by resloving in boot()
+            - Access the anv vars: `env('THE_ENV_VAR');`
+        - Set the Environment Variable during Deployment in YML files:
+        ``` option_settings:
+                aws:elasticbeanstalk:application:
+                    environment:
+                        THE_ENV_VAR: "the-env-var"
+        ```
+    - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used) - see below *CI/CD Implementation* section.
+    - Elasticbeanstalk Extensions (.ebexensions) - see below *CI/CD Implementation* section.
+    - SES (Simple Email Service)
+        - Send mail method in service class: `app\Services\AWSService.php` >> `sendEmail()`
+        - Make sure the email address used as the Source in sendEmail is verified in your SES account. You can set this email in your .env file: `SES_SOURCE_EMAIL=your-ses-verified-email@example.com`
+        - Using the AWSService Class to Send Emails in controller action: `app\Http\Controllers\Api\V2\AWSController.php` >> `sendSESTestEmail()`
+        - Define Route: `routes\api_v2.php`
+        - Configure the mail driver in: ` config/mail.php` >> `'default' => env('MAIL_MAILER', 'ses'),`
+        - Configure AWS SES configuration: `config/services.php` (to get from `.env` already available)
+        - Update `.env` File
+    - SQS (Simple Queue Service)
+        - Send and Recive messages methods in service class: `app\Services\AWSService.php` >> `sendMessageToSQSQueue()` & `receiveMessagesFromSQSQueue()`
+        - Define Routes: `routes\api_v2.php`
+        - Configure AWS SQS as a queue driver in `config/queue.php` >> `connections` array
+        - Update `.env` File
+        - If using the AWSService Class to Send and Recive messages in controller actions: `app\Http\Controllers\Api\V2\AWSController.php` >> `sendSQSMessage()` & `receiveSQSMessages()`
+        - If queuing a Laravel job:-------to do
+            - Using SQS in a Job - Create a job that will be pushed to the SQS queue: `php artisan make:job SendEmailJob`
+            - 
+            - Run/Start the queue worker to process jobs from the SQS queue: `php artisan queue:work`
 
-- "Other sections - Coming in Next Week.................."
+- **CI/CD Implementation**
+    - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used)
+        - See `buildspec.yml`
+    - Elasticbeanstalk Extensions (.ebexensions)
+        - .ebextensions/enable-laravel-log-file-writable.config
+            - Why: This extension ensures that the Laravel application can write to its log files within the storage/logs directory.
+            - What it does:
+                container_commands: Defines commands to run within the Elastic Beanstalk container.
+                    01_run_bootstrap_command:
+                        command: Sets ownership of the storage/logs directory and its contents to the webapp user and group. This allows the Laravel application running under the webapp user to write to the logs.
+                        cwd: Specifies the working directory where the command is executed. Here, it's /var/app/staging, which is the default deployment directory for Elastic Beanstalk staging environments. This path doesn't need to be changed for production environments.
+                    02_run_bootstrap_command:
+                        command: Sets permissions on the storage directory to 775. This grants read, write, and execute access for the owner (webapp), the group (webapp), and others (for execution only).
+
+        - .ebextensions/env-variables.config
+            - Why: This extension retrieves environment variables from Elastic Beanstalk and sets them as shell environment variables for your application.
+            - What it does:
+                container_commands: Defines commands to run within the container.
+                    setvars:
+                        command: Retrieves environment variables using Elastic Beanstalk's get-config command and pipes the output through jq to format it as shell environment variable assignments. The formatted output is then written to /etc/profile.d/local.sh. This script gets sourced when the shell starts, making the environment variables available to your application.
+                packages: Defines software packages to install on the Elastic Beanstalk instance.
+                    yum: Specifies packages to install using the Yum package manager.
+                        jq: Installs the jq command-line JSON processor, which is required for parsing the environment variable output from get-config.
+
+        - .ebextensions/install-composer.config
+            - Why: This extension installs Composer, a dependency management tool for PHP projects, if it's not already installed.
+            - What it does:
+                container_commands: Defines commands to run within the container.
+                    01installcomposer:
+                        command: Downloads the Composer installer script, runs it with sudo to install Composer globally, and specifies the installation directory (/usr/local/bin) and filename (composer).
+                        ignoreErrors: Set to false (default), meaning the deployment will fail if this command fails.
+
+        - .ebextensions/install-mysql-client.config
+            - Why: This extension installs the MySQL client library if you need to interact with a MySQL database from your Laravel application.
+            - What it does:
+                container_commands: Defines commands to run within the container.
+                    01installmysql80:
+                        command: Adds the MySQL Yum repository for version 8.0 using a provided URL.
+                    02installmysql80:
+                        command: Installs the MySQL community server using Yum.
+                    03startmysqld:
+                        command: Starts the MySQL daemon using systemctl.
+                    04checkstatus:
+                        command: Checks the status of the MySQL daemon using systemctl.
+
+        - .ebextensions/laravel-schedule-cron.config
+            - Why: This extension sets up a cron job to run the Laravel scheduler periodically.
+            - What it does:
+                files: Defines file configurations to manage on the Elastic Beanstalk instance.
+                    /etc/cron.d/mycron:
+                        mode: Sets the file permissions to 000644 (read and write for owner, read for group and others).
+                        owner: Sets the file owner to root.
+                        group: Sets the file group to root.
+                        content: Defines the cron job schedule and command to execute. The cron expression * * * * * runs the command every minute. The command webapp php /var/www/html/artisan schedule:run >> /var/log/schedule_debug.log 2>&1 executes the Laravel scheduler (artisan schedule:run) using the webapp user, redirects standard output and error to the /var/log/schedule_debug.log file for debugging
+
+- **Scheduling**
+    - Scheduling Queued Jobs:
+        - Jobs and Queues (Jobs are Queued)
+        - Scheduling Queued Jobs
+    - Scheduling Artisan Commands
+        - src\app\Console\Commands\SendTenantProposalReminders.php
+        - Scheduling in 
+            - .ebextensions\laravel-schedule-cron.config
+            - src\app\Console\Kernel.php (not in L 11)
+
+- **Caching with Redis** - ToDo
+
+- **Mails** - ToDo
+    - Uses Mailable, Queueable, SerializesModels, Envelope, Content etc.
+    - AWS SES: See AWS SES section
+
+- **Notifications** - ToDo
+    - Events
+    - Listeners
+    - Queueable
+    - ServiceProvider
+    - DB tables
+
+- **Event Broadcasting (WebSockets)** - ToDo
+
+---
 
 # How to run the application 
 - Install required Composer packages using: `composer i`

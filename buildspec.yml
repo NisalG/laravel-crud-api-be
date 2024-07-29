@@ -51,3 +51,6 @@ artifacts:
 #proxy:
 #  upload-artifacts: yes
 #  logs: yes
+environment_variables:
+  plaintext:
+    THE_ENV_VAR: "the-env-var"
