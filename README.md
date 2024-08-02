@@ -1,6 +1,6 @@
 # Laravel 11 Adavanced API BE CRUD
 
-# Laravel 11 Changes
+# Laravel 11 Changes (More info in Laravel 11 Release Notes: https://laravel.com/docs/11.x/releases)
 - Bootstrap file `bootstrap/app.php` as central configuration point	
 - Reduced default service providers from five to one AppServiceProvider (`app\Providers\AppServiceProvider.php` file)	
 - Event discovery and route model bindings enabled by default: 
@@ -48,7 +48,7 @@
 - **API**
     - Authentication with Sanctum
     - Versioning
-    - Rate Limiting & Throtteling
+    - Rate Limiting & Throttling
     - API Request validation
     - API Resource for transforming Responses
 
@@ -67,7 +67,7 @@
         - Authentication with Sanctum
             - Sanctum Token Security
         - Password Hashing
-        - Rate Limiting & Throtteling
+        - Rate Limiting & Throttling
     - Additional Security Measures
         - HTTPS
         - Environment Configuration
@@ -84,8 +84,8 @@
     - AWS SDK for PHP
     - File Storage - AWS S3
     - Parameter Store
-    - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used) - see below *CI/CD Implementation* section.
-    - Elasticbeanstalk Extensions (.ebexensions) - see below *CI/CD Implementation* section.
+    - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used) - see *CI/CD Implementation* section.
+    - Elasticbeanstalk Extensions (.ebexensions) - see *CI/CD Implementation* section.
     - SES (To do)
     - SQS (To do)
 
@@ -97,11 +97,11 @@
     - Scheduling Queued Jobs
     - Scheduling Artisan Commands
 
-- **Caching with Redis** - ToDo
-
 - **Mails** - ToDo
     - Uses Mailable, Queueable, SerializesModels, Envelope, Content etc.
     - AWS SES: See AWS SES section
+
+- **Caching with Redis**
 
 - **Notifications** - ToDo
     - Events
@@ -256,7 +256,7 @@
         - `app\Http\Controllers\Api\V1\UserController.php`
         - `app\Http\Controllers\Api\V2\UserController.php`
         - Add `v1` or `v2` to Postman requests
-    - Rate Limiting & Throtteling
+    - Rate Limiting & Throttling
         - `app\Providers\RouteServiceProvider.php`
         - `routes\api_v1.php`
         - Test it by setting ‘1’ to `app\Providers\RouteServiceProvider.php` >> `configureRateLimiting()` >> `Limit::perMinute(1)`
@@ -398,7 +398,7 @@
             - Ensure the correct environment set in .env: `APP_ENV=production`
             - Set forceScheme in the `app/Providers/AppServiceProvider.php` >> `boot()`
         - Environment Configuration
-            Secure .env file by not exposed to the public and sensitive information like database credentials and API keys are kept secure. See AWS Parameter Store implementation below.
+            Secure .env file by not exposed to the public and sensitive information like database credentials and API keys are kept secure. See *AWS Parameter Store* implementation section.
         - Encrypt Sensitive Data: Use Laravel’s encryption to store sensitive data securely.
             - What should be encrypted:
                 - Personal Identifiable Information (PII): Social Security Numbers (SSN), Driver's License Numbers, Passport Numbers, National Identification Numbers
@@ -435,7 +435,7 @@
             - `\config\sanctum.php`
         - Route Middleware for `api` & `web`: 
             - `app\Providers\RouteServiceProvider.php` >> `Route::middleware('api')` & `Route::middleware('web')`
-        - Throttle Middleware with Custom Limits (See API throtteling section):
+        - Throttle Middleware with Custom Limits (See API Throttling section):
             - `routes\api_v1.php` >> `Route::middleware('throttle:api')`
         - CORS Middleware
         - Verify CSRF Token Middleware
@@ -502,8 +502,8 @@
                     environment:
                         THE_ENV_VAR: "the-env-var"
         ```
-    - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used) - see below *CI/CD Implementation* section.
-    - Elasticbeanstalk Extensions (.ebexensions) - see below *CI/CD Implementation* section.
+    - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3, RDS, EC2, CloudFront, ECS, Route53 will be used) - see *CI/CD Implementation* section.
+    - Elasticbeanstalk Extensions (.ebexensions) - see *CI/CD Implementation* section.
     - SES (Simple Email Service)
         - Send mail method in service class: `app\Services\AWSService.php` >> `sendEmail()`
         - Make sure the email address used as the Source in sendEmail is verified in your SES account. You can set this email in your .env file: `SES_SOURCE_EMAIL=your-ses-verified-email@example.com`
@@ -513,18 +513,19 @@
         - Configure AWS SES configuration: `config/services.php` (to get from `.env` already available)
         - Update `.env` File
     - SQS (Simple Queue Service)
+        - See *Scheduling* section as well. 
         - Send and Recive messages methods in service class: `app\Services\AWSService.php` >> `sendMessageToSQSQueue()` & `receiveMessagesFromSQSQueue()`
         - Define Routes: `routes\api_v2.php`
         - Configure AWS SQS as a queue driver in `config/queue.php` >> `connections` array
         - Update `.env` File
         - If using the AWSService Class to Send and Recive messages in controller actions: `app\Http\Controllers\Api\V2\AWSController.php` >> `sendSQSMessage()` & `receiveSQSMessages()`
         - If queuing a Laravel job:-------to do
-            - Using SQS in a Job - Create a job that will be pushed to the SQS queue: `php artisan make:job SendEmailJob`
+            - Using SQS in a Job - Create a job that will be pushed to the SQS queue: `php artisan make:job SendSQSEmailJob`
             - 
             - Run/Start the queue worker to process jobs from the SQS queue: `php artisan queue:work`
-
+    - Redis Caching setting up on EC2 instance with Amazon Linux OS - See *Caching with Redis* section 
 - **CI/CD Implementation**
-    - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used)
+    - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3, RDS, EC2, CloudFront, ECS, Route53 will be used)
         - See `buildspec.yml`
     - Elasticbeanstalk Extensions (.ebexensions)
         - .ebextensions/enable-laravel-log-file-writable.config
@@ -588,12 +589,71 @@
             - .ebextensions\laravel-schedule-cron.config
             - src\app\Console\Kernel.php (not in L 11)
 
-- **Caching with Redis** - ToDo
-
-- **Mails** - ToDo
+- **Mails**
     - Uses Mailable, Queueable, SerializesModels, Envelope, Content etc.
+    - Send mails instantly: 
+    - Send Scheduled Emails: see *AWS > SQS* & *Scheduling* sections 
     - AWS SES: See AWS SES section
 
+- **Caching with Redis**
+    - Redis Cache Usage
+        - **Purpose:** Improve application performance by storing frequently accessed data in-memory.
+        - **Commonly Cached Data:** Session data, user profiles, product catalogs, dynamic content, API responses, leaderboards(sport score boards), real-time analytics, pub/sub messages.
+        - **Use Cases:** Rate limiting, distributed locks, queues.
+        - **Key Factors:** Read-heavy workloads, data staleness tolerance, cache size, cache invalidation.
+    - Installing 
+        - Local setup: Redis on Windows and Setting Up with Laravel
+            - Download Redis for Windows from Microsoft archive.
+            - Extract the ZIP file and run redis-server.exe.
+            - CMD as Admin: `redis-server --service-install redis.windows-service.conf --loglevel verbose redis-server --service-start`
+            - To see what values are cached at the moment install `RedisInsight`
+        - Deployed(PRD) setup: Installing Redis on AWS Linux EC2 for Laravel
+            - Elastic Beanstalk 
+                - Environment >> Configuration:
+                ```CACHE_STORE=redis
+                    REDIS_HOST=your-redis-endpoint
+                    REDIS_PASSWORD=null
+                    REDIS_PORT=6379```
+                - Ensure the security group for your Elastic Beanstalk instances allows outbound traffic to the Redis server's security group on port `6379`.
+            - EC2 instance:
+                - Conect to the EC2 instance
+                - Update package lists: `sudo yum check-update`
+                - Update all packages: `sudo yum update -y`
+                - Install Redis: `sudo amazon-linux-extras install redis6 -y`
+                - Start the Redis service: `sudo systemctl start redis`
+                - Enable Redis to start on boot: `sudo systemctl enable redis`
+    - Setting up in Laravel project:
+        - Install the predis/predis package: `composer require predis/predis`
+        - Update `.env`
+            - `CACHE_STORE`
+            - `REDIS_CLIENT`
+            - `REDIS_HOST`
+            - `REDIS_PASSWORD`
+            - `REDIS_PORT`
+        - Check `config/cache.php` >> `'default' => env('CACHE_STORE', 'redis'),`
+        - Check if uses for Sessions: `config/session.php` >> `'driver' => env('SESSION_DRIVER', 'redis'),`
+        - Check if uses for Queues: `config/queue.php` >> `'default' => env('QUEUE_CONNECTION', 'redis'),`
+        - Verify Redis Connection in `routes\api_v2.php` >> `/test-redis` route
+        - There are two ways to use Redis in Laravel 
+            - With default `use Illuminate\Support\Facades\Cache;` facade, after above configurations.
+                - Store a value in the Redis cache for 60 minutes: `Cache::put('key', 'value', 60);`
+                - Retrieve a value from the Redis cache: `$value = Cache::get('key');`
+                - Checking if a Key Exists: `if (Cache::has('key')) { // Key exists }`
+                - Removing Data from Cache: `Cache::forget('key');`
+            - With directly using `use Illuminate\Support\Facades\Redis;` facade
+                - Set a Value: `app\Http\Controllers\Api\V2\CategoryController.php` >> `index()`
+                - Get a Value: `app\Http\Controllers\Api\V2\CategoryController.php` >> `index()`
+                - Clear cache for a value: `app\Http\Controllers\Api\V2\CategoryController.php` >> `store()`
+                - Advanced Usage:
+                    - Using Redis Pub/Sub:
+                        - Subscribe to a channel:
+                            ```Redis::subscribe(['channel'], function ($message) {
+                                echo $message;
+                            });```
+                        - Publish to a channel: `Redis::publish('channel', 'Hello, World!');`
+                    - Working with Redis Hashes:
+                        - Set a hash value: `Redis::hset('hash_key', 'field', 'value');`
+                        - Get a hash value: `$value = Redis::hget('hash_key', 'field');`
 - **Notifications** - ToDo
     - Events
     - Listeners

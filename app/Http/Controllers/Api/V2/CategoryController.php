@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redis;
 
 use App\Models\Category;
 use App\Exceptions\AuthorizationException;
@@ -15,11 +16,32 @@ use App\Exceptions\ValidationException;
 
 class CategoryController extends Controller
 {
+    public function index()
+    {
+        $cachedCategories = Redis::get('categories.all');
+
+        if ($cachedCategories) {
+            $categories = json_decode($cachedCategories, true);
+        } else {
+            $categories = Category::all();
+            Redis::set('categories.all', json_encode($categories));
+        }
+
+        return response()->json($categories);
+    }
+
     public function show($id)
     {
-        $category = Category::find($id);
-        if (!$category) {
-            throw new EntityNotFoundException('Category');
+        $cachedCategory = Redis::get("category.$id");
+
+        if ($cachedCategory) {
+            $category = json_decode($cachedCategory, true);
+        } else {
+            $category = Category::find($id);
+            if (!$category) {
+                throw new EntityNotFoundException('Category');
+            }
+            Redis::set("category.$id", json_encode($category));
         }
 
         return response()->json($category);
@@ -37,11 +59,40 @@ class CategoryController extends Controller
 
         try {
             $category = Category::create($request->all());
+            // Clear cache for all categories
+            Redis::del('categories.all');
         } catch (\Exception $e) {
             throw new DatabaseException("Failed to create category");
         }
 
         return response()->json($category, 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator->errors()->all());
+        }
+
+        $category = Category::find($id);
+        if (!$category) {
+            throw new EntityNotFoundException('Category');
+        }
+
+        try {
+            $category->update($request->all());
+            // Clear cache for the updated category and all categories
+            Redis::del("category.$id");
+            Redis::del('categories.all');
+        } catch (\Exception $e) {
+            throw new DatabaseException("Failed to update category");
+        }
+
+        return response()->json($category, 200);
     }
 
     public function destroy($id)
@@ -59,6 +110,9 @@ class CategoryController extends Controller
 
         try {
             $category->delete();
+            // Clear cache for the deleted category and all categories
+            Redis::del("category.$id");
+            Redis::del('categories.all');
         } catch (\Exception $e) {
             throw new DatabaseException("Failed to delete category");
         }
@@ -73,19 +127,16 @@ class CategoryController extends Controller
     public function getCategoriesWithPostsEager()
     {
         // Fetch all categories with their posts eagerly loaded
-        $categories = Category::with('posts')->get();
+        $cachedCategories = Redis::get('categories.with.posts');
 
-        // Posts are already loaded, so no additional queries are executed
-        foreach ($categories as $category) {
-            $posts = $category->posts;
-
-            // Do something with the posts
-            foreach ($posts as $post) {
-                echo $post->title . '<br>';
-            }
+        if ($cachedCategories) {
+            $categories = json_decode($cachedCategories, true);
+        } else {
+            $categories = Category::with('posts')->get();
+            Redis::set('categories.with.posts', json_encode($categories));
         }
 
-        return view('categories.index', compact('categories'));
+        return response()->json($categories);
     }
 
     // Lazy load categories then their posts
@@ -97,26 +148,42 @@ class CategoryController extends Controller
     public function getCategoriesWithPostsLazy()
     {
         // Fetch all categories
-        $categories = Category::all();
+        $cachedCategories = Redis::get('categories.all');
 
-        // Lazy load posts for each category
-        foreach ($categories as $category) {
-            // Access posts, which triggers lazy loading
-            $posts = $category->posts;
-
-            // Do something with the posts
-            foreach ($posts as $post) {
-                echo $post->title . '<br>';
-            }
+        if ($cachedCategories) {
+            $categories = json_decode($cachedCategories, true);
+        } else {
+            $categories = Category::all();
+            Redis::set('categories.all', json_encode($categories));
         }
 
-        return view('categories.index', compact('categories'));
+        return response()->json($categories);
+
+        // Lazy load posts for each category in FE / Blade
+        // foreach ($categories as $category) {
+        //     // Access posts, which triggers lazy loading
+        //     $posts = $category->posts;
+
+        //     // Do something with the posts
+        //     foreach ($posts as $post) {
+        //         echo $post->title . '<br>';
+        //     }
+        // }
     }
 
     // Subqueries: Get categories with the count of posts.
     public function getCategoriesWithPostsCount()
     {
-        $categories = Category::withCount('posts')->get();
+        $cachedCategoriesCount = Redis::get('categories.with.posts.count');
+
+        if ($cachedCategoriesCount) {
+            $categories = json_decode($cachedCategoriesCount, true);
+        } else {
+            $categories = Category::withCount('posts')->get();
+            Redis::set('categories.with.posts.count', json_encode($categories));
+        }
+
+        return response()->json($categories);
     }
 
     // Polymorphic Relationship usage sample - Adding a comment to a category.
@@ -124,8 +191,18 @@ class CategoryController extends Controller
     public function addCategoryComment(Request $request)
     {
         $category = Category::find($request->category_id);
+        if (!$category) {
+            throw new EntityNotFoundException('Category');
+        }
+
         $category->comments()->create([
             'body' => 'This is a comment on a category.',
         ]);
+        
+        // Optionally clear cache related to the category and all categories
+        Redis::del("category.{$category->id}");
+        Redis::del('categories.all');
+
+        return response()->json(['message' => 'Comment added successfully'], 201);
     }
 }

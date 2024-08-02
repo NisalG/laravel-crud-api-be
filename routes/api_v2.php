@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V2\CategoryController;
 use App\Http\Controllers\Api\V2\AWSController;
 use App\Http\Controllers\Api\V2\CoinGeckoController;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 
 // Middlewares
 use App\Http\Middleware\RoleManagement;
@@ -77,3 +78,9 @@ Route::post('/send-email', [AWSController::class, 'sendTestSESEmail']);
 // Route for AWS SQS Queue Testing
 Route::post('/send-message', [AWSController::class, 'sendSQSMessage']);
 Route::post('/receive-messages', [AWSController::class, 'receiveSQSMessages']);
+
+// Route for Redis`s Cache Testing
+Route::get('/test-redis', function () {
+    Cache::put('test-key', 'test-value', 10);
+    return Cache::get('test-key');
+});

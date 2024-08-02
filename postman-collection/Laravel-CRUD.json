@@ -1,358 +1,784 @@
 {
-    "info": {
-        "_postman_id": "2a367e3d-53e2-4ec4-a9fa-b968b352ef47",
-        "name": "Laravel CRUD API",
-        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-        "_exporter_id": "5617218"
-    },
-    "item": [
-        {
-            "name": "Users to check if API V1 works",
-            "request": {
-                "method": "GET",
-                "header": [
-                    {
-                        "key": "Accept",
-                        "value": "application/json"
-                    }
-                ],
-                "url": {
-                    "raw": "http://127.0.0.1:8000/api/v1/users",
-                    "protocol": "http",
-                    "host": ["127", "0", "0", "1"],
-                    "port": "8000",
-                    "path": ["api", "v1", "users"]
-                }
-            },
-            "response": []
-        },
-        {
-            "name": "Register",
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Accept",
-                        "value": "application/json"
-                    }
-                ],
-                "body": {
-                    "mode": "formdata",
-                    "formdata": [
-                        {
-                            "key": "name",
-                            "value": "aaa",
-                            "type": "text"
-                        },
-                        {
-                            "key": "email",
-                            "value": "aaa@aa.com",
-                            "type": "text"
-                        },
-                        {
-                            "key": "password",
-                            "value": "123456",
-                            "type": "text"
-                        },
-                        {
-                            "key": "password_confirmation",
-                            "value": "123456",
-                            "type": "text"
-                        }
-                    ]
-                },
-                "url": {
-                    "raw": "http://127.0.0.1:8000/api/v2/register",
-                    "protocol": "http",
-                    "host": ["127", "0", "0", "1"],
-                    "port": "8000",
-                    "path": ["api", "v2", "register"]
-                }
-            },
-            "response": []
-        },
-        {
-            "name": "Login",
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Accept",
-                        "value": "application/json"
-                    }
-                ],
-                "body": {
-                    "mode": "formdata",
-                    "formdata": [
-                        {
-                            "key": "email",
-                            "value": "aaa@aa.com",
-                            "type": "text"
-                        },
-                        {
-                            "key": "password",
-                            "value": "123456",
-                            "type": "text"
-                        }
-                    ]
-                },
-                "url": {
-                    "raw": "http://127.0.0.1:8000/api/v2/login",
-                    "protocol": "http",
-                    "host": ["127", "0", "0", "1"],
-                    "port": "8000",
-                    "path": ["api", "v2", "login"]
-                }
-            },
-            "response": []
-        },
-        {
-            "name": "Logout",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "2|cEqpvxVlw9u2W0GX7HXugzidULPOK9GeJjeF9sYX69166c64",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "POST",
-                "header": [],
-                "url": {
-                    "raw": "http://127.0.0.1:8000/api/v2/logout?Accept=application/json",
-                    "protocol": "http",
-                    "host": ["127", "0", "0", "1"],
-                    "port": "8000",
-                    "path": ["api", "v2", "logout"],
-                    "query": [
-                        {
-                            "key": "Accept",
-                            "value": "application/json"
-                        }
-                    ]
-                }
-            },
-            "response": []
-        },
-        {
-            "name": "Answers",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "3|oLlYuL7pyakdya8hWJbfWTC6dqgzUNfTUZtFZPCw303f5738",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "GET",
-                "header": [
-                    {
-                        "key": "Accept",
-                        "value": "application/json"
-                    }
-                ],
-                "url": {
-                    "raw": "http://127.0.0.1:8000/api/v2/faqs/answers?faq=\"what is a deductible?\"",
-                    "protocol": "http",
-                    "host": ["127", "0", "0", "1"],
-                    "port": "8000",
-                    "path": ["api", "v2", "faqs", "answers"],
-                    "query": [
-                        {
-                            "key": "faq",
-                            "value": "\"what is a deductible?\""
-                        }
-                    ]
-                }
-            },
-            "response": []
-        },
-        {
-            "name": "List All Posts",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "3|oLlYuL7pyakdya8hWJbfWTC6dqgzUNfTUZtFZPCw303f5738",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "GET",
-                "header": [
-                    {
-                        "key": "Accept",
-                        "value": "application/json"
-                    }
-                ],
-                "url": {
-                    "raw": "http://127.0.0.1:8000/api/v2/posts",
-                    "protocol": "http",
-                    "host": ["127", "0", "0", "1"],
-                    "port": "8000",
-                    "path": ["api", "v2", "posts"]
-                }
-            },
-            "response": []
-        },
-        {
-            "name": "Get Post by ID",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "3|oLlYuL7pyakdya8hWJbfWTC6dqgzUNfTUZtFZPCw303f5738",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "GET",
-                "header": [
-                    {
-                        "key": "Accept",
-                        "value": "application/json"
-                    }
-                ],
-                "url": {
-                    "raw": "http://127.0.0.1:8000/api/v2/posts/{id}",
-                    "protocol": "http",
-                    "host": ["127", "0", "0", "1"],
-                    "port": "8000",
-                    "path": ["api", "v2", "posts", "{id}"]
-                }
-            },
-            "response": []
-        },
-        {
-            "name": "Create Post",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "3|oLlYuL7pyakdya8hWJbfWTC6dqgzUNfTUZtFZPCw303f5738",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Accept",
-                        "value": "application/json"
-                    }
-                ],
-                "body": {
-                    "mode": "raw",
-                    "raw": {
-                        "title": "Sample Post",
-                        "slug": "sample-post",
-                        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                        "category_id": 1,
-                        "published_at": "2024-06-30T12:00:00Z"
-                    },
-                    "options": {
-                        "raw": {
-                            "language": "json"
-                        }
-                    }
-                },
-                "url": {
-                    "raw": "http://127.0.0.1:8000/api/v2/posts",
-                    "protocol": "http",
-                    "host": ["127", "0", "0", "1"],
-                    "port": "8000",
-                    "path": ["api", "v2", "posts"]
-                }
-            },
-            "response": []
-        },
-        {
-            "name": "Update Post",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "3|oLlYuL7pyakdya8hWJbfWTC6dqgzUNfTUZtFZPCw303f5738",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "PUT",
-                "header": [
-                    {
-                        "key": "Accept",
-                        "value": "application/json"
-                    }
-                ],
-                "body": {
-                    "mode": "raw",
-                    "raw": {
-                        "id": 1,
-                        "title": "Updated Post Title",
-                        "slug": "updated-post-title",
-                        "content": "Updated content for the post.",
-                        "category_id": 2,
-                        "published_at": "2024-07-01T12:00:00Z"
-                    },
-                    "options": {
-                        "raw": {
-                            "language": "json"
-                        }
-                    }
-                },
-                "url": {
-                    "raw": "http://127.0.0.1:8000/api/v2/posts/1",
-                    "protocol": "http",
-                    "host": ["127", "0", "0", "1"],
-                    "port": "8000",
-                    "path": ["api", "v2", "posts", "1"]
-                }
-            },
-            "response": []
-        },
-        {
-            "name": "Delete Post",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "3|oLlYuL7pyakdya8hWJbfWTC6dqgzUNfTUZtFZPCw303f5738",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "DELETE",
-                "header": [
-                    {
-                        "key": "Accept",
-                        "value": "application/json"
-                    }
-                ],
-                "url": {
-                    "raw": "http://127.0.0.1:8000/api/v2/posts/1",
-                    "protocol": "http",
-                    "host": ["127", "0", "0", "1"],
-                    "port": "8000",
-                    "path": ["api", "v2", "posts", "1"]
-                }
-            },
-            "response": []
-        }
-    ]
+	"info": {
+		"_postman_id": "aeb7e1a7-0b37-40b9-a505-814d5e94d637",
+		"name": "laravel-crud-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "5617218"
+	},
+	"item": [
+		{
+			"name": "Users to check if API V1 works",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "3|BXdhVQinw9KVHVSg1qKwq31Em1ly93Ewy9m1SBDX82b636a2",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v1/users",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "aaa",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "aaa@aa.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "123456",
+							"type": "text"
+						},
+						{
+							"key": "password_confirmation",
+							"value": "123456",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/register",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "email",
+							"value": "aaa@aa.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "123456",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/login",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "13|rDuviI0clF2gb1GpBilNIZmh1nPNDPpiQiBdrjZQ9f3a0893",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/logout",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"logout"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Answers",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "3|BXdhVQinw9KVHVSg1qKwq31Em1ly93Ewy9m1SBDX82b636a2",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/posts/answers?faq=\"what is a deductible?\"",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"posts",
+						"answers"
+					],
+					"query": [
+						{
+							"key": "faq",
+							"value": "\"what is a deductible?\""
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List All Posts",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "14|2pmn7KLZFvNm2YYngIveVuVUk8mHF3oZxu4Q8jgqd7f91b20",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/posts",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"posts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Post by ID",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "14|2pmn7KLZFvNm2YYngIveVuVUk8mHF3oZxu4Q8jgqd7f91b20",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/posts/1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"posts",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Testing Role-Based Access Control Middleware",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|22rKLCzHhQWpKbcFrqSrUvbXr8DrlbEERCQY8Dqibf3ea9eb",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/admin",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"admin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Testing Logging User Activity Middleware",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|22rKLCzHhQWpKbcFrqSrUvbXr8DrlbEERCQY8Dqibf3ea9eb",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/profile",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"profile"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Testing Localization Middleware Set",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|22rKLCzHhQWpKbcFrqSrUvbXr8DrlbEERCQY8Dqibf3ea9eb",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/set-locale?locale=es",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"set-locale"
+					],
+					"query": [
+						{
+							"key": "locale",
+							"value": "es"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Testing Localization Middleware Get",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "14|2pmn7KLZFvNm2YYngIveVuVUk8mHF3oZxu4Q8jgqd7f91b20",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/current-locale",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"current-locale"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Post",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "14|2pmn7KLZFvNm2YYngIveVuVUk8mHF3oZxu4Q8jgqd7f91b20",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "title",
+							"value": "Sample Post",
+							"type": "text"
+						},
+						{
+							"key": "slug",
+							"value": "sample-post",
+							"type": "text"
+						},
+						{
+							"key": "content",
+							"value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+							"type": "text"
+						},
+						{
+							"key": "category_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "published_at",
+							"value": "2023-07-01 00:00:00",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/posts",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"posts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Post",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "14|2pmn7KLZFvNm2YYngIveVuVUk8mHF3oZxu4Q8jgqd7f91b20",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "title",
+							"value": "Sample Post4",
+							"type": "text"
+						},
+						{
+							"key": "slug",
+							"value": "sample-post4",
+							"type": "text"
+						},
+						{
+							"key": "content",
+							"value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+							"type": "text"
+						},
+						{
+							"key": "category_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "published_at",
+							"value": "2023-07-01 00:00:00",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/posts/4",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"posts",
+						"4"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Post",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "14|2pmn7KLZFvNm2YYngIveVuVUk8mHF3oZxu4Q8jgqd7f91b20",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/posts/1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"posts",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Category",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "5|z7CrFKcw9r61yk3cLOw9y5DeGLXVQQ1Mp9yjEAKUca3d3b56",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "Sample Category2",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/categories",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"categories"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Category by ID",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|22rKLCzHhQWpKbcFrqSrUvbXr8DrlbEERCQY8Dqibf3ea9eb",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/categories/12",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"categories",
+						"12"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Category",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|22rKLCzHhQWpKbcFrqSrUvbXr8DrlbEERCQY8Dqibf3ea9eb",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v2/categories/23",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v2",
+						"categories",
+						"23"
+					]
+				}
+			},
+			"response": []
+		}
+	]
 }
