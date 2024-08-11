@@ -16,44 +16,46 @@ class AWSService
     
     public function __construct()
     {
-        $this->s3Client = new S3Client([
-            'version' => 'latest',
-            'region'  => env('AWS_DEFAULT_REGION'),
-            'credentials' => [
-                'key'    => env('AWS_ACCESS_KEY_ID'),
-                'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            ],
-        ]);
+        // *********************Enable below with proper AWS Credentials. Otherwise it will give errors when php artisan serve
+        // $this->s3Client = new S3Client([
+        //     'version' => 'latest',
+        //     'region'  => env('AWS_DEFAULT_REGION'),
+        //     'credentials' => [
+        //         'key'    => env('AWS_ACCESS_KEY_ID'),
+        //         'secret' => env('AWS_SECRET_ACCESS_KEY'),
+        //     ],
+        // ]);
 
-        $this->ssmClient = new SsmClient([
-            'version' => 'latest',
-            'region'  => env('AWS_DEFAULT_REGION'),
-            'credentials' => [
-                'key'    => env('AWS_ACCESS_KEY_ID'),
-                'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            ],
-        ]);
+        // $this->ssmClient = new SsmClient([
+        //     'version' => 'latest',
+        //     'region'  => env('AWS_DEFAULT_REGION'),
+        //     'credentials' => [
+        //         'key'    => env('AWS_ACCESS_KEY_ID'),
+        //         'secret' => env('AWS_SECRET_ACCESS_KEY'),
+        //     ],
+        // ]);
 
-        $this->sesClient = new SesClient([
-            'version' => 'latest',
-            'region'  => env('AWS_DEFAULT_REGION'),
-            'credentials' => [
-                'key'    => env('AWS_ACCESS_KEY_ID'),
-                'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            ],
-        ]);
+        // $this->sesClient = new SesClient([
+        //     'version' => 'latest',
+        //     'region'  => env('AWS_DEFAULT_REGION'),
+        //     'credentials' => [
+        //         'key'    => env('AWS_ACCESS_KEY_ID'),
+        //         'secret' => env('AWS_SECRET_ACCESS_KEY'),
+        //     ],
+        // ]);
 
-        $this->sqsClient = new SqsClient([
-            'version' => 'latest',
-            'region'  => env('AWS_DEFAULT_REGION'),
-            'credentials' => [
-                'key'    => env('AWS_ACCESS_KEY_ID'),
-                'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            ],
-        ]);
+        // $this->sqsClient = new SqsClient([
+        //     'version' => 'latest',
+        //     'region'  => env('AWS_DEFAULT_REGION'),
+        //     'credentials' => [
+        //         'key'    => env('AWS_ACCESS_KEY_ID'),
+        //         'secret' => env('AWS_SECRET_ACCESS_KEY'),
+        //     ],
+        // ]);
 
-        $this->setEnvironmentVariables(); // environment variables are set up as soon as the service is loaded
+        // $this->setEnvironmentVariables(); // environment variables are set up as soon as the service is loaded
 
+        // *********************Enable above with proper AWS Credentials. Otherwise it will give errors when php artisan serve
     }
 
     public function getS3Object($bucket, $key)

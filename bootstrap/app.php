@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Console\Scheduling\Schedule;
 
 use App\Exceptions\Handler;
 use App\Exceptions\CustomExceptionHandler;
@@ -11,6 +12,9 @@ use App\Exceptions\CustomExceptionHandler;
 use App\Http\Middleware\RoleManagement;
 use App\Http\Middleware\LogUserActivity;
 use App\Http\Middleware\Localization;
+use App\Jobs\DeleteOldPostsJob;
+use App\Mail\SendDailyPostCountEmail;
+use Illuminate\Support\Facades\Mail;
 
 $app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -51,12 +55,25 @@ $app = Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => 'Database error'], 500);
             },
         ];
-    })->create();
-    
-// Laravel 10 method
-// $app->singleton(
-//     ExceptionHandler::class,
-//     CustomExceptionHandler::class
-// );
+    })
+    // Laravel 10 method
+    // $app->singleton(
+    //     ExceptionHandler::class,
+    //     CustomExceptionHandler::class
+    // );
 
+    //define your scheduled tasks
+    //According to the documentation, it is better to be done in here rather than in routes\console.php for clarity
+    // Couldn't find a working example to pass params for this, therefore use routes\console.php one 
+
+    // ->withSchedule(function (Schedule $schedule, $to, $emailData) {
+    //     $schedule->call( function ($to, $emailData) {
+    //         // Mail::to($to)->send(new SendDailyPostCountEmail($emailData));
+    //         Mail::to($to)->send(new SendDailyPostCountEmail($emailData));
+    //     })->everyMinute();
+    // })
+
+    // create the application instance
+    ->create();
+    
 return $app;

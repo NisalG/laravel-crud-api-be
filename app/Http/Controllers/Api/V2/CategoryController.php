@@ -13,6 +13,8 @@ use App\Exceptions\AuthorizationException;
 use App\Exceptions\DatabaseException;
 use App\Exceptions\EntityNotFoundException;
 use App\Exceptions\ValidationException;
+use App\Mail\SendCategoryDeleteEmail;
+use Illuminate\Support\Facades\Mail;
 
 class CategoryController extends Controller
 {
@@ -110,11 +112,26 @@ class CategoryController extends Controller
 
         try {
             $category->delete();
+
             // Clear cache for the deleted category and all categories
-            Redis::del("category.$id");
-            Redis::del('categories.all');
+            // Redis::del("category.$id");
+            // Redis::del('categories.all');
+
+            // Send email
+            $emailData = [
+                'title' => 'This is Test Mail Title',
+                'body' => 'This email body is for testing purposes',
+            ];
+
+            // Do not send attachments with $attachments and assign to a $attachments variable to the below class and they will be read automtically by Laravel
+            // If you want to send attachments from here, add them to the $emailData variable
+            Mail::to('tempmail@gmail.com')->send(new SendCategoryDeleteEmail($emailData));
+        } catch (DatabaseException $e) {
+            // Handle DatabaseException specifically
+            throw new DatabaseException("Failed to delete category: " . $e->getMessage(), $e->getCode(), $e);
         } catch (\Exception $e) {
-            throw new DatabaseException("Failed to delete category");
+            // Handle any other exceptions
+            throw new \Exception("Failed to delete category: " . $e->getMessage(), $e->getCode(), $e);
         }
 
         return response()->json(['message' => 'Category deleted successfully'], 200);

@@ -10,9 +10,9 @@
 - Optional API and broadcast routing :
     - The api.php and channels.php route files are no longer present by default, as many applications do not require these files.
     - Can be created with Artisan commands
-- Middleware integrated into the framework, customizable in bootstrap file `bootstrap/app.php`	
-- Removal of HTTP kernel class (`src\app\Http\Kernel.php` file)	
-- Scheduled tasks defined directly in console routes file `routes/console.php` (`src\app\Console\Kernel.php` file removed)	
+- Removal of HTTP Kernel class (`src\app\Http\Kernel.php` file)	and Console Kernel class (`src\app\Console\Kernel.php` file)
+    - Middleware integrated into the framework, customizable in bootstrap file `bootstrap/app.php` (since `src\app\Http\Kernel.php` file removed)
+    - Scheduled tasks defined directly in console routes file `routes/console.php` (since `src\app\Console\Kernel.php` file removed)	
 - Exception handling configured in bootstrap file `bootstrap/app.php`	
 - Simplified base controller class (`app\Http\Controllers\Controller.php` file)
 - Default database storage: SQLite	
@@ -86,22 +86,28 @@
     - Parameter Store
     - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used) - see *CI/CD Implementation* section.
     - Elasticbeanstalk Extensions (.ebexensions) - see *CI/CD Implementation* section.
-    - SES (To do)
-    - SQS (To do)
+    - SES
+    - SQS
+
+- **Schedules vs Queues**
+
+- **Schedules**
+    - Scheduling Artisan Commands
+    - Scheduling Queued Jobs
+
+- **Queues**
+
+- **Mails**
+    - Uses Mailable, Queueable, SerializesModels, Envelope, Content etc.
+    - Send emails with Sendgrid (with an attachment)
+    - Send Scheduled Emails: see *AWS > SQS* & *Scheduling* sections
+    - Also see these sections: `AWS SES`, `AWS SQS`, `Scheduling` 
+
+- **Caching with Redis**
 
 - **CI/CD Implementation**
     - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used)
     - Elasticbeanstalk Extensions (.ebexensions)
-
-- **Scheduling**
-    - Scheduling Queued Jobs
-    - Scheduling Artisan Commands
-
-- **Mails** - ToDo
-    - Uses Mailable, Queueable, SerializesModels, Envelope, Content etc.
-    - AWS SES: See AWS SES section
-
-- **Caching with Redis**
 
 - **Notifications** - ToDo
     - Events
@@ -301,7 +307,7 @@
         - `fullTextIndex()` & `fullText()` - For full-text search capabilities on text columns
             - `fullText()` - to mark a column as searchable within Laravel's Eloquent queries.
             - `fullTextIndex()` - to create a dedicated full-text index for optimal search performance on large datasets.
-    - Soft Deletes with `deleted_at` in ``
+    - Soft Deletes with `deleted_at` in `\database\migrations\2024_07_21_000815_enable_softdelete_in_category_table.php`
         - `up()` >> `softDeletes()`
         - `down()` >> `dropSoftDeletes()`
     - `id()`, `increment()` & `bigIncrements()`
@@ -377,12 +383,14 @@
                 - For Blade templates, outputting variables is done using `{{ }}` which automatically escapes HTML: `{{ $comment->name }}`
         - Cross-Site Request Forgery (CSRF):
             - Laravel API projects: CSRF protection is typically disabled for `api` routes, 
-            using Laravel Sanctum stateless authentication tokens for secure token-based authentication and authorization.
+            using Laravel Sanctum (Passport before L10) stateless authentication tokens for secure token-based authentication and authorization. But still in L 11  `bootstrap\app.php` >> `withMiddleware()` >> `validateCsrfTokens()` is available by default.
             - Laravel Web projects:
                 - CSRF Tokens: Laravel automatically generates a CSRF token for each active user session managed by the application. This token is used to verify that the authenticated user is the one actually making the requests to the application.`<form method="POST" action="/example">@csrf<!-- Other inputs --></form>`
 
-                - CSRF Middleware: Ensure that the `VerifyCsrfToken` middleware is enabled in  `Kernel.php` file:
-                `protected $middlewareGroups = ['web' => [ \App\Http\Middleware\VerifyCsrfToken::class,],];`
+                - CSRF Middleware: 
+                    - L 11: Ensure that the enabled: `bootstrap\app.php` >> `withMiddleware()` >> `validateCsrfTokens()`
+                    - Before L 11: Ensure that the `VerifyCsrfToken` middleware is enabled in  `src\app\Http\Kernel.php` file:
+                    `protected $middlewareGroups = ['web' => [ \App\Http\Middleware\VerifyCsrfToken::class,],];`
         - SQL Injection:  Use Laravel’s query builder(Parameterized Queries) or Eloquent ORM to prevent SQL injection.
             - Query Builder: `$users = DB::table('users')->where('email', $email)->get();`
             - Eloquent ORM: `$user = User::where('email', $email)->first();`
@@ -428,8 +436,8 @@
         - Content Security Policy (CSP): Implement CSP: Use a content security policy to mitigate XSS attacks by defining which sources are allowed to load content on the webapplication.
 
 - **Middlewares**
-    - Previously, new Laravel applications included nine middleware for tasks like authenticating requests, trimming input strings, and validating CSRF tokens. In Laravel 11, these middleware are now part of the framework itself, reducing the application's bulk. Customization of these middleware can be done through new methods in the framework, which can be invoked from your application's `bootstrap/app.php` file. There's no registering in `kernel.php` in Laravel 11 since that file is not available.
-    - Deafult (already available and non-custom middlewares). Can be invoked and configured in `bootstrap/app.php` >> `withMiddleware()` 
+    - Previously, new Laravel applications included nine middleware for tasks like authenticating requests, trimming input strings, and validating CSRF tokens. In Laravel 11, these middleware are now part of the framework itself, reducing the application's bulk. Customization of these middleware can be done through new methods in the framework, which can be invoked from your application's `bootstrap/app.php` >> `withMiddleware()` >> `validateCsrfTokens()`. There's no registering in `src\app\Http\Kernel.php` in Laravel 11 since that file is not available.
+    - Deafult (already available and non-custom middlewares). Can be invoked and configured in `bootstrap/app.php` >> `withMiddleware()` >> `validateCsrfTokens()`
         - Sanctum Auth Middleware:
             - `routes\api_v2.php` >> `middleware('auth:sanctum')` && `'middleware' => 'auth:sanctum'`
             - `\config\sanctum.php`
@@ -444,12 +452,12 @@
         - Steps:
             - `php artisan make:middleware MyMiddleware`
             - File will be created: `app/Http/Middleware/MyMiddleware.php`
-            - Register the middleware (no Kernel.php in Laravel 11) in: `bootstrap\app.php` >> `Application::configure()` >> `withMiddleware()`
+            - Register the middleware (no `src\app\Http\Kernel.php` in Laravel 11) in: `bootstrap\app.php` >> `Application::configure()` >> `withMiddleware()`
             - Use middlware in route files: `routes\api_v2.php` >> `middleware()`
             - Use routes without a certain middlware in a route group: `withoutMiddleware()`
         - Role-Based Access Control Middleware:
             - `php artisan make:middleware RoleManagement` creates `app/Http/Middleware/RoleManagement.php`
-            - Register the middleware (no Kernel.php in Laravel 11) in: `bootstrap\app.php` >> `Application::configure()` >> `withMiddleware()` >> `prepend()`
+            - Register the middleware (no `src\app\Http\Kernel.php` in Laravel 11) in: `bootstrap\app.php` >> `Application::configure()` >> `withMiddleware()` >> `prepend()`
             - Using/Testing route in: `routes\api_v2.php`
             - Example Postman Request: [GET] http://127.0.0.1:8000/api/v2/admin
                 - Headers: Key: Authorization | Value: Bearer <Auth Token>
@@ -458,7 +466,7 @@
                     - If the user is not an admin: [403] "message": "Unauthorized"
         - Logging User Activity Middleware:
             - `php artisan make:middleware LogUserActivity` creates `app\Http\Middleware\LogUserActivity.php`
-            - Register the middleware (no Kernel.php in Laravel 11) in: `bootstrap\app.php` >> `Application::configure()` >> `withMiddleware()` >> `prepend()`
+            - Register the middleware (no `src\app\Http\Kernel.php` in Laravel 11) in: `bootstrap\app.php` >> `Application::configure()` >> `withMiddleware()` >> `prepend()`
             - Using/Testing route in: `routes\api_v2.php`
             - Example Postman Request: [GET] http://127.0.0.1:8000/api/v2/profile
                 - Headers: Key: Authorization | Value: Bearer <Auth Token>
@@ -497,7 +505,7 @@
                 - Ensure AWSService is available from the start of your application and environment variables are set up immediately by resloving in boot()
             - Access the anv vars: `env('THE_ENV_VAR');`
         - Set the Environment Variable during Deployment in YML files:
-        ``` option_settings:
+        ```option_settings:
                 aws:elasticbeanstalk:application:
                     environment:
                         THE_ENV_VAR: "the-env-var"
@@ -519,11 +527,328 @@
         - Configure AWS SQS as a queue driver in `config/queue.php` >> `connections` array
         - Update `.env` File
         - If using the AWSService Class to Send and Recive messages in controller actions: `app\Http\Controllers\Api\V2\AWSController.php` >> `sendSQSMessage()` & `receiveSQSMessages()`
-        - If queuing a Laravel job:-------to do
+        - If queuing a Laravel job:
             - Using SQS in a Job - Create a job that will be pushed to the SQS queue: `php artisan make:job SendSQSEmailJob`
-            - 
-            - Run/Start the queue worker to process jobs from the SQS queue: `php artisan queue:work`
+            - Locally: Test locally with `config/queue.php` >> `database` section.
+                - Create queue table:
+                    - `php artisan make:queue-table`
+                    - `php artisan migrate`
+                - Run/Start the queue worker to process jobs from the SQS queue: `php artisan queue:work`
+            - STG/PRD: 
+                - Add to AWS Beanstalk extenstions(`.ebextensions`)
     - Redis Caching setting up on EC2 instance with Amazon Linux OS - See *Caching with Redis* section 
+
+- **Schedules vs Queues**
+    
+    In Laravel, both schedules and queues are used for managing tasks, but they serve different purposes and are best suited for different types of operations. Here's a comparison and guidance on when to use each:
+
+    - Laravel Schedules
+
+        **Purpose:**
+        Laravel's scheduling system allows you to define scheduled tasks that are executed at specified intervals. This is particularly useful for tasks that need to run periodically, like daily, weekly, or monthly.
+
+        **How It Works:**
+            You define scheduled tasks in the App\Console\Kernel class within the schedule method.
+            You then set up a single cron entry on your server that calls Laravel's scheduler every minute. Laravel will check your schedule and run the appropriate tasks.
+
+        **Use Cases:**
+            Routine Maintenance: Cleaning up old logs or temporary files.
+            Regular Data Processing: Aggregating data, generating reports, or synchronizing with external APIs on a regular basis.
+            Periodic Notifications: Sending scheduled emails or reminders.
+            Database Cleanup: Regularly purging old records or running database optimizations.
+
+        **Advantages:**
+            Simplifies the management of periodic tasks.
+            No need to handle job queuing or worker processes.
+
+        **Disadvantages:**
+            The frequency is limited to the cron schedule's precision (typically every minute).
+            Not ideal for tasks that need immediate execution or are highly variable in timing.
+
+    - Laravel Queues
+
+        **Purpose:**
+        Laravel's queue system is designed to handle background processing of jobs. It's ideal for tasks that are time-consuming or need to be processed asynchronously.
+
+        **How It Works:**
+            Jobs are pushed onto a queue and processed by workers.
+            You define jobs that handle specific tasks and then dispatch these jobs to the queue.
+            Workers pick up these jobs and execute them. You can configure different queues and workers based on your needs.
+
+        **Use Cases:**
+            Background Processing: Sending emails, processing file uploads, or generating reports that should not block the main application flow.
+            Delayed Tasks: Performing actions with a delay (e.g., sending reminders or notifications at a later time).
+            High-Volume Tasks: Handling tasks that involve a lot of computation or external API calls.
+
+        **Advantages:**
+            Allows for more complex job handling and retry mechanisms.
+            Can scale easily by adding more workers or changing the queue driver.
+            Supports delayed execution and priority levels.
+
+        **Disadvantages:**
+            Requires configuration of queue drivers (e.g., Redis, database) and workers.
+            Adds some complexity in managing and monitoring job execution.
+
+- **Schedules**
+    
+    Executes scheduled tasks defined at specified intervals. Runs pending tasks and then exits. Ideal for periodic tasks like backups or cleanups. Usually triggered by a cron job.
+        
+    - Task schedule is defined in `routes/console.php`. Schedule a closure sample(`command`, `job` below ) to be called every day at midnight: 
+        ```Schedule::call(function () {
+            DB::table('recent_users')->delete();
+        })->daily();
+        ```
+
+    - If you prefer to reserve `routes/console.php` for `command` definitions only, you may use the `withSchedule` method in `bootstrap/app.php` to define your scheduled tasks. Scheduling a closure (`command`, `job` below ) sample:
+        ```use Illuminate\Console\Scheduling\Schedule;
+        
+        ->withSchedule(function (Schedule $schedule) {
+            DB::table('recent_users')->delete();
+        });
+        ```
+
+    - Overview of scheduled tasks and the next time they are scheduled to run: `php artisan schedule:list`
+
+    - Scheduling Artisan Commands using the `command` method:
+            `Schedule::command('emails:send Taylor --force')->daily();`
+            `Schedule::command(SendEmailsCommand::class, ['Taylor', '--force'])->daily();`
+
+    - Scheduling Queued Jobs using `job` method:
+        ``` use App\Jobs\Heartbeat;
+            use Illuminate\Support\Facades\Schedule;
+            Schedule::job(new Heartbeat)->everyFiveMinutes();
+        ```
+    - Preventing Task Overlaps
+        By default, scheduled tasks will be run even if the previous instance of the task is still running. To prevent this, you may use the `withoutOverlapping` method:
+            `use Illuminate\Support\Facades\Schedule;`
+            `Schedule::command('emails:send')->withoutOverlapping();`
+
+    - Background Tasks
+        By default, multiple tasks scheduled at the same time will execute sequentially based on the order they are defined in `schedule` method. If you have long-running tasks, this may cause subsequent tasks to start much later than anticipated. If you would like to run tasks in the background so that they may all run simultaneously, you may use the runInBackground method: 
+        
+        ```
+        use Illuminate\Support\Facades\Schedule;
+        
+        Schedule::command('analytics:report')
+                ->daily()
+                ->runInBackground();
+        ```
+
+    - Running the Scheduler Locally: `php artisan schedule:work`
+
+    - Running the Scheduler on Servers (STG/PRD)
+        Use schedule:run Artisan command on AWS EC2 instance CRONTab (single entry is enough), AWS ElasticBeanstalk .ebextensions, Laravel Forge, etc.
+
+    - Scheduling Artisan Commands:
+        - Create mailable: `php artisan make:mail SendDailyPostCountEmail`
+            - `app\Mail\SendDailyPostCountEmail.php` will be created
+        
+        - Create mail layout in: `resources\views\emails\sendDailyPostCountEmail.blade.php`
+
+        - Create command: `php artisan make:command SendDailyPostCountEmailCommand`
+            - `app\Console\Commands\SendDailyPostCountEmailCommand.php` file will be created.
+                - Set `$signature`, `$description`, `handle()`
+
+        - Scheduling: `routes/console.php` >> 
+        ```
+            Schedule::command('app:send-daily-post-count-email example@example.com John')
+                // ->dailyAt('10:00')
+                ->everyMinute();
+        ```
+        - No `src\app\Console\Kernel.php` in L11 (If L10 should add in there)
+
+        - Running:
+            - Locally: `php artisan schedule:work`
+                - Email will be sent (Or laravel.log will be updated)
+                    - Test mail locally:
+                    - `.env` > `MAIL_MAILER=log`
+                    - The emails will be logged to your `storage/logs/laravel.log` file
+                - Get an overview of scheduled tasks: `php artisan schedule:list`
+            - STG/PRD: 
+                - Cron Job Setup on Linux Server using CRON tab
+                    - `crontab -e`
+                    - `* * * * * cd /path-to-your-project & php artisan schedule:run >> /dev/null 2>&1`
+                - Cron Job Setup on Linux Server using AWS Elastic Beanstalk extensions: `.ebextensions\laravel-schedule-cron.config`
+
+    - Scheduling Queued Jobs (Queue this jobs as in the Queue section to add into `jobs` table, otherwise below doesn't work): 
+        - Creating a Job: `php artisan make:job DeleteOldPostsJob`
+
+        - Define the job: Add logic to define job in `app\Jobs\DeleteOldPostsJob.php` >> `handle()`
+
+        - Queue this jobs as in the Queue section, otherwise below doesn't work
+
+        - Job Scheduling with Laravel Scheduler to run every minute
+            - Method 1 (not good for clarity): in `routes\console.php` >> `Schedule::job(new DeleteOldPostsJob($data))->everyMinute();`
+            - Method 2 (good for clarity, but couldn't find a working sample): in `bootstrap\app.php` >> `withSchedule` >> `Schedule::job(new DeleteOldPostsJob($data))->everyMinute();`
+            ```use Illuminate\Console\Scheduling\Schedule;
+            
+            ->withSchedule(function (Schedule $schedule) {
+                Schedule::job(new DeleteOldPostsJob($emailData))->everyMinute();
+            });
+            ```
+
+        - Running: Same as above Console section
+
+- **Queues**
+
+    Jobs and Queues (Jobs are Queued): Queues defer time-consuming tasks to run in background, improving performance and responsiveness. Laravel 11 supports various queue backends: `Redis`, `Amazon SQS`, `Beanstalkd`, and `database`. Jobs represent a unit of work that can be dispatched onto the queue. Queue workers process jobs pushed onto the queue.
+
+
+    Laravel Queue Worker
+    - Starts processing queued jobs asynchronously, useful for tasks like sending emails or file processing. 
+	- Runs continuously, listening for new jobs to handle.
+
+	- In L11 `jobs` table is already available. If not create the jobs table:
+		- `php artisan queue:table`
+		- `php artisan migrate`
+
+    - Creating a Job: `php artisan make:job SendPostUpdatedEmailJob`
+
+    - Define the job: Add logic to define job in `app\Jobs\SendPostUpdatedEmailJob.php` >> `handle()`
+		
+	- Dispatching (pushing the job to queue - this will add to `jobs` table) a Job in a Controller Action: 
+	`app\Http\Controllers\Api\V2\PostController.php` >> `update()` >> `SendPostUpdatedEmailJob::dispatch($email)`
+    These does not populate `jobs` table: Scheduled tasks (unless they dispatch jobs), Artisan commands, event listeners.
+
+	- Running Queue Worker:
+		- Run/test Locally: 
+			- .env update:
+				- `.env` >> `QUEUE_CONNECTION=database`
+				- `.env` > `MAIL_MAILER=log`
+				- Stop and run: `php artisan serve`
+			- `php artisan queue:work` -- this will execute the jobs and if fails will add to `failed_jobs` table with the error
+			- In another Terminal tab: `php artisan serve`
+			- Test mail locally by sending Postman request: [PUT] `http://127.0.0.1:8000/api/v2/posts/8`
+				- `app\Http\Controllers\Api\V2\PostController.php` >> `update()` >> `SendPostUpdatedEmailJob::dispatch($email)` will add to `jobs` table
+				- Running Queue Worker (started by `php artisan queue:work`) will execute the job at once (if no delay is added)
+				- Email will be sent (Or `laravel.log` will be updated)
+				- The emails will be logged to your `storage/logs/laravel.log` file (since `.env` > `MAIL_MAILER=log` is set to test mail locally) 
+				- If succeeded, the command out puts `Done`, it deletes the job from `jobs` table
+				- If failed, the command out puts `Failed`, add to `failed_jobs` table
+				- If you change anything in `app\Jobs\SendPostUpdatedEmailJob.php` you should restart: `php artisan queue:work`
+			- Running a Queue Worker specify Connection and Queue: `php artisan queue:work redis --queue=default`
+		- Run on STG/PRD: 
+			- Cron Job Setup on Linux Server using CRON tab
+				- `crontab -e`
+			- Cron Job Setup on Linux Server using AWS Elastic Beanstalk extensions: `.ebextensions\laravel-queue-worker.config`
+				- `leader_only`: true ensures that the command is only run on the leader instance in an autoscaling group.
+				- The `--daemon` flag makes the worker run continuously, processing jobs as they come in.
+
+	- Handling Failed Jobs in a `failed_jobs` database table
+		- A migration to create the `failed_jobs` table is already in Laravel 11 applications.
+		- If not available:
+			- Generate and run migrations:
+				- `php artisan queue:failed-table`
+				- `php artisan migrate`
+
+			- Configure failed job services in `config\queue.php`:
+			```'failed' => [
+					'database' => env('DB_CONNECTION', 'mysql'),
+					'table' => 'failed_jobs',
+				],
+            ```
+		- Retrying Failed Jobs:
+			`php artisan queue:retry all`
+			`php artisan queue:retry {job_id}`
+		- Cleaning Up Failed Jobs: `php artisan queue:flush` 
+			
+    - Also see *AWS* > *SQS* section
+
+
+- **Mails**
+    - Uses Mailable, Queueable, SerializesModels, Envelope, Content etc.
+    - Send mail with attachments suing basic `log` driver to log the mail in `storage/logs/laravel.log`
+    - Basic email with `log` driver:
+        - `.env` > `MAIL_MAILER=log`
+        - Stop and run: `php artisan serve`
+        - `app\Http\Controllers\Api\V2\CategoryController.php` >> `destroy()` >> `Mail::to()`
+        - `php artisan make:mail SendCategoryDeleteEmail`
+        - Change `app\Mail\SendCategoryDeleteEmail.php` accordingly
+        - Test mail locally by sending Postman request: [DELETE] `http://127.0.0.1:8000/api/v2/categories/2`:
+            - The emails will be logged to your `storage/logs/laravel.log` file
+    - Send emails with *Sendgrid* (with an attachment):
+        - Install SendGrid: `composer require sendgrid/sendgrid`
+        - Setup Mail Configuration in `.env` > Sendgrid
+        - Create Mail Class: `php artisan make:mail SendCategoryDeleteEmail`
+        - Update `app/Mail/SendCategoryDeleteEmail.php`
+        - Create a Blade template at `resources/views/emails/sendCategoryDeleteEmail.blade.php` and update `app/Mail/SendCategoryDeleteEmail.php` >> `content()` with its name `emails.sendCategoryDeleteEmail`
+        - Add mailing to a controler action: `app\Http\Controllers\Api\V2\CategoryController.php` >> `destroy()`
+        - Add attachments files:
+            - Create an `attachments` folder inside `storage/app` and paste testing files in there
+            - Create a Symlink to Public Directory: `php artisan storage:link`
+            - Update Controller to Use Storage Path
+        - Testing (local/STG/PRD):
+            - SendGrid can work in both local and production environments using the above steps. This will trigger the email sending functionality and you should receive an email with the attachments.
+    - Send Scheduled Emails: see *AWS > SQS*, *AWS SES* & *Scheduling* sections
+
+- **Caching with Redis**
+    - Redis Cache Usage
+        - **Purpose:** Improve application performance by storing frequently accessed data in-memory.
+        - **Commonly Cached Data:** Session data, user profiles, product catalogs, dynamic content, API responses, leaderboards(sport score boards), real-time analytics, pub/sub messages.
+        - **Use Cases:** Rate limiting, distributed locks, queues.
+        - **Key Factors:** Read-heavy workloads, data staleness tolerance, cache size, cache invalidation.
+    - Installing Redis
+        - Local setup: Redis on Windows and Setting Up with Laravel
+            - Download Redis for Windows from Microsoft archive.
+            - Extract the ZIP file and run redis-server.exe.
+            - CMD as Admin: `redis-server --service-install redis.windows-service.conf --loglevel verbose redis-server --service-start`
+            - To see what values are cached at the moment install `RedisInsight`
+        - Deployed(PRD) setup: Installing Redis on AWS Linux EC2 for Laravel
+            - Elastic Beanstalk 
+                - Environment >> Configuration:
+                ```
+                    CACHE_STORE=redis
+                    REDIS_HOST=your-redis-endpoint
+                    REDIS_PASSWORD=null
+                    REDIS_PORT=6379
+                ```
+                - Ensure the security group for your Elastic Beanstalk instances allows outbound traffic to the Redis server's security group on port `6379`.
+            - EC2 instance:
+                - Conect to the EC2 instance
+                - Update package lists: `sudo yum check-update`
+                - Update all packages: `sudo yum update -y`
+                - Install Redis: `sudo amazon-linux-extras install redis6 -y`
+                - Start the Redis service: `sudo systemctl start redis`
+                - Enable Redis to start on boot: `sudo systemctl enable redis`
+    - Setting up Redis in Laravel project:
+        - Install the predis/predis package: `composer require predis/predis`
+        - Update `.env`
+            - `CACHE_STORE`
+            - `REDIS_CLIENT`
+            - `REDIS_HOST`
+            - `REDIS_PASSWORD`
+            - `REDIS_PORT`
+        - Check `config/cache.php` >> `'default' => env('CACHE_STORE', 'redis'),`
+        - Check if uses for Sessions: `config/session.php` >> `'driver' => env('SESSION_DRIVER', 'redis'),`
+        - Check if uses for Queues: `config/queue.php` >> `'default' => env('QUEUE_CONNECTION', 'redis'),`
+        - Verify Redis Connection in `routes\api_v2.php` >> `/test-redis` route
+        - There are two ways to use Redis in Laravel 
+            - With default `use Illuminate\Support\Facades\Cache;` facade, after above configurations.
+                - Store a value in the Redis cache for 60 minutes: `Cache::put('key', 'value', 60);`
+                - Retrieve a value from the Redis cache: `$value = Cache::get('key');`
+                - Checking if a Key Exists: `if (Cache::has('key')) { // Key exists }`
+                - Removing Data from Cache: `Cache::forget('key');`
+            - With directly using `use Illuminate\Support\Facades\Redis;` facade
+                - Set a Value: `app\Http\Controllers\Api\V2\CategoryController.php` >> `index()`
+                - Get a Value: `app\Http\Controllers\Api\V2\CategoryController.php` >> `index()`
+                - Clear cache for a value: `app\Http\Controllers\Api\V2\CategoryController.php` >> `store()`
+                - Advanced Usage:
+                    - Using Redis Pub/Sub:
+                        - Subscribe to a channel:
+                            ```
+                            Redis::subscribe(['channel'], function ($message) {
+                                echo $message;
+                            });
+                            ```
+                        - Publish to a channel: `Redis::publish('channel', 'Hello, World!');`
+                    - Working with Redis Hashes:
+                        - Set a hash value: `Redis::hset('hash_key', 'field', 'value');`
+                        - Get a hash value: `$value = Redis::hget('hash_key', 'field');`
+    - Disable Redis in Laravel project:
+        - `config/cache.php` >> `'default' => env('CACHE_DRIVER', 'file'),` 
+        - `config/session.php` >> `'driver' => env('SESSION_DRIVER', 'file'),`
+        - `.env` >>  `CACHE_DRIVER=file` & `SESSION_DRIVER=file`
+
 - **CI/CD Implementation**
     - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3, RDS, EC2, CloudFront, ECS, Route53 will be used)
         - See `buildspec.yml`
@@ -579,81 +904,97 @@
                         group: Sets the file group to root.
                         content: Defines the cron job schedule and command to execute. The cron expression * * * * * runs the command every minute. The command webapp php /var/www/html/artisan schedule:run >> /var/log/schedule_debug.log 2>&1 executes the Laravel scheduler (artisan schedule:run) using the webapp user, redirects standard output and error to the /var/log/schedule_debug.log file for debugging
 
-- **Scheduling**
-    - Scheduling Queued Jobs:
-        - Jobs and Queues (Jobs are Queued)
-        - Scheduling Queued Jobs
-    - Scheduling Artisan Commands
-        - src\app\Console\Commands\SendTenantProposalReminders.php
-        - Scheduling in 
-            - .ebextensions\laravel-schedule-cron.config
-            - src\app\Console\Kernel.php (not in L 11)
+-**Laravel Events & Listeners Overview:**
 
-- **Mails**
-    - Uses Mailable, Queueable, SerializesModels, Envelope, Content etc.
-    - Send mails instantly: 
-    - Send Scheduled Emails: see *AWS > SQS* & *Scheduling* sections 
-    - AWS SES: See AWS SES section
+Events in Laravel allow you to implement the observer pattern, where events are dispatched, and multiple listeners can respond to them, promoting loose coupling in your application.
 
-- **Caching with Redis**
-    - Redis Cache Usage
-        - **Purpose:** Improve application performance by storing frequently accessed data in-memory.
-        - **Commonly Cached Data:** Session data, user profiles, product catalogs, dynamic content, API responses, leaderboards(sport score boards), real-time analytics, pub/sub messages.
-        - **Use Cases:** Rate limiting, distributed locks, queues.
-        - **Key Factors:** Read-heavy workloads, data staleness tolerance, cache size, cache invalidation.
-    - Installing 
-        - Local setup: Redis on Windows and Setting Up with Laravel
-            - Download Redis for Windows from Microsoft archive.
-            - Extract the ZIP file and run redis-server.exe.
-            - CMD as Admin: `redis-server --service-install redis.windows-service.conf --loglevel verbose redis-server --service-start`
-            - To see what values are cached at the moment install `RedisInsight`
-        - Deployed(PRD) setup: Installing Redis on AWS Linux EC2 for Laravel
-            - Elastic Beanstalk 
-                - Environment >> Configuration:
-                ```CACHE_STORE=redis
-                    REDIS_HOST=your-redis-endpoint
-                    REDIS_PASSWORD=null
-                    REDIS_PORT=6379```
-                - Ensure the security group for your Elastic Beanstalk instances allows outbound traffic to the Redis server's security group on port `6379`.
-            - EC2 instance:
-                - Conect to the EC2 instance
-                - Update package lists: `sudo yum check-update`
-                - Update all packages: `sudo yum update -y`
-                - Install Redis: `sudo amazon-linux-extras install redis6 -y`
-                - Start the Redis service: `sudo systemctl start redis`
-                - Enable Redis to start on boot: `sudo systemctl enable redis`
-    - Setting up in Laravel project:
-        - Install the predis/predis package: `composer require predis/predis`
-        - Update `.env`
-            - `CACHE_STORE`
-            - `REDIS_CLIENT`
-            - `REDIS_HOST`
-            - `REDIS_PASSWORD`
-            - `REDIS_PORT`
-        - Check `config/cache.php` >> `'default' => env('CACHE_STORE', 'redis'),`
-        - Check if uses for Sessions: `config/session.php` >> `'driver' => env('SESSION_DRIVER', 'redis'),`
-        - Check if uses for Queues: `config/queue.php` >> `'default' => env('QUEUE_CONNECTION', 'redis'),`
-        - Verify Redis Connection in `routes\api_v2.php` >> `/test-redis` route
-        - There are two ways to use Redis in Laravel 
-            - With default `use Illuminate\Support\Facades\Cache;` facade, after above configurations.
-                - Store a value in the Redis cache for 60 minutes: `Cache::put('key', 'value', 60);`
-                - Retrieve a value from the Redis cache: `$value = Cache::get('key');`
-                - Checking if a Key Exists: `if (Cache::has('key')) { // Key exists }`
-                - Removing Data from Cache: `Cache::forget('key');`
-            - With directly using `use Illuminate\Support\Facades\Redis;` facade
-                - Set a Value: `app\Http\Controllers\Api\V2\CategoryController.php` >> `index()`
-                - Get a Value: `app\Http\Controllers\Api\V2\CategoryController.php` >> `index()`
-                - Clear cache for a value: `app\Http\Controllers\Api\V2\CategoryController.php` >> `store()`
-                - Advanced Usage:
-                    - Using Redis Pub/Sub:
-                        - Subscribe to a channel:
-                            ```Redis::subscribe(['channel'], function ($message) {
-                                echo $message;
-                            });```
-                        - Publish to a channel: `Redis::publish('channel', 'Hello, World!');`
-                    - Working with Redis Hashes:
-                        - Set a hash value: `Redis::hset('hash_key', 'field', 'value');`
-                        - Get a hash value: `$value = Redis::hget('hash_key', 'field');`
+- Generating Events & Listeners:
+    Use Artisan commands to create events and listeners:
+    - `php artisan make:event EventName`
+
+    - `php artisan make:listener ListenerName --event=EventName`
+
+- Registering Events & Listeners:
+    - Automatic Registration:
+            Laravel automatically registers listeners by scanning the `Listeners` directory. Methods named `handle` or` __invoke` will be registered.
+    - Manual Registration:
+            Use the Event facade in `AppServiceProvider's` `boot()` method.
+        ```
+        Event::listen(
+            EventName::class,
+            ListenerName::class,
+        );
+        ```
+- Closure & Queueable Listeners:
+
+    - Closure Listeners:
+        Can be defined directly in the boot method using the `Event::listen()` method.
+    
+    - Queueable Listeners:
+        Wrap closures with `queueable` for executing via queue.
+        ```
+        Event::listen(queueable(function (EventName $event) {
+            // Logic here...
+        })->onConnection('redis')->onQueue('queue_name'));
+        ```
+
+- Wildcard Event Listeners:
+
+    Allows catching multiple events with a single listener using `*` as a wildcard.
+
+    ```
+    Event::listen('event.*', function (string $eventName, array $data) {
+        // Handle wildcard event...
+    });
+    ```
+
+- Defining Events & Listeners:
+
+    - Event Class:
+        A simple data container that holds event-related information.
+        
+        ```
+        class OrderShipped
+        {
+            public function __construct(public Order $order) {}
+        }
+        ```
+
+    - Listener Class:
+
+        Handles the event logic in the `handle` method.
+    
+        ```
+        class SendShipmentNotification
+        {
+            public function handle(OrderShipped $event): void
+            {
+                // Handle the event...
+            }
+        }
+        ```
+
+- Queued Event Listeners:
+
+    - Implement ShouldQueue interface to queue listeners.
+    - Customize queue behavior using `$connection`, `$queue`, and `$delay` properties or methods like `viaConnection` and `viaQueue`.
+
+- Event Subscribers:
+
+    Subscribers can listen to multiple events within a single class by defining event-handler methods.
+    ```
+    class UserEventSubscriber
+    {
+        public function subscribe(Dispatcher $events): void
+        {
+            $events->listen(Login::class, [UserEventSubscriber::class, 'handleUserLogin']);
+        }
+    }
+    ```
+
+    - Register in AppServiceProvider using `Event::subscribe()`.
+
+
 - **Notifications** - ToDo
     - Events
     - Listeners

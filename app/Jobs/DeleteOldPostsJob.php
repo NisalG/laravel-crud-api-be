@@ -9,18 +9,18 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;  
 
-class SendEmailJob implements ShouldQueue
+class DeleteOldPostsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $emailData;
+    protected $data;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(array $emailData)
+    public function __construct(array $data)
     {
-        $this->emailData = $emailData;
+        $this->data = $data;
     }
 
     /**
@@ -28,9 +28,11 @@ class SendEmailJob implements ShouldQueue
      */
     public function handle(): void
     {
-        // Send email using the provided data
-        Mail::send('email.template', $this->emailData, function ($message) {
-            $message->to($this->emailData['to'])->subject($this->emailData['subject']);
-        });
+        info('Schedled Job sample: Job runs to delete posts older than 1 year.');
+
+        // Jab for testing scheduled job
+        // Use Post Model to delete post older than 1 year here
+        // $this->data['somedata'] = 'somedata';
+
     }
 }

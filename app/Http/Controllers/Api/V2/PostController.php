@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
 use App\Swagger\Schemas;
 use App\Http\Resources\PostResource;
+use App\Jobs\SendPostUpdatedEmailJob;
 
 class PostController extends Controller
 {
@@ -134,6 +135,7 @@ class PostController extends Controller
             $post->category_id = $request->input('category_id');
             $post->content = $request->input('content');
             $post->published_at = $request->input('published_at');
+            $post->user_id = $request->input('user_id');
 
             // Save the Post to the database
             $post->save();
@@ -145,6 +147,7 @@ class PostController extends Controller
             // With using API resource
             // $post = Post::create($post);
             // return new PostResource($post);
+
             return response()->json(new PostResource($post), 201); // Created
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to create post', 'message' => $e->getMessage()], 500);
@@ -289,7 +292,7 @@ class PostController extends Controller
      */
     public function update(Request $request, $id)
     {
-        dd($request);
+        // dd($request->all());
         try {
             $post = Post::findOrFail($id);
 
@@ -318,6 +321,12 @@ class PostController extends Controller
 
             // Update the post
             $post->update($validatedData);
+
+            // Send email using Queued Jobs
+            // Dispatching (pushing the job to queue) a Job. This will add to jobs table
+            // $email = $post->author->email; // example
+            $email = 'UWY0J@example.com';
+            SendPostUpdatedEmailJob::dispatch($email);
 
             return new PostResource($post);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
