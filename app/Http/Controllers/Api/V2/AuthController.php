@@ -70,7 +70,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'country_id' => 1
+            'country_id' => $request->country_id
         ]);
 
         // Generate API token for the newly registered user (optional)

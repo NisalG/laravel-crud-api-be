@@ -15,98 +15,55 @@ use App\Exceptions\EntityNotFoundException;
 use App\Exceptions\ValidationException;
 use App\Mail\SendCategoryDeleteEmail;
 use Illuminate\Support\Facades\Mail;
-use App\Services\CategoryValidatorService;
-use App\Contracts\CategoryRepositoryInterface;
 
 class CategoryController extends Controller
 {
-    protected $categoryRepository;
-
-    public function __construct(CategoryRepositoryInterface $categoryRepository)
-    {
-        $this->categoryRepository = $categoryRepository;
-    }
-
     public function index()
     {
+        $cachedCategories = Redis::get('categories.all');
 
-        //long: using redis::get/set
-        // $cachedCategories = Redis::get('categories.all');
-
-        // if ($cachedCategories) {
-        //     $categories = json_decode($cachedCategories, true);
-        // } else {
-        //     $categories = Category::all();
-        //     Redis::set('categories.all', json_encode($categories));
-        // }
-
-        // short using redis::remember (expires in 60 seconds)
-        try {
-            // Fetch categories from Redis or retrieve from repository if not cached
-            $categories = Redis::remember('categories.all', 60 * 60, function () {
-                return $this->categoryRepository->getAllCategories();
-            });
-
-            return response()->json($categories, 200);
-        } catch (\Exception $e) {
-            throw new DatabaseException("Failed to retrieve categories");
+        if ($cachedCategories) {
+            $categories = json_decode($cachedCategories, true);
+        } else {
+            $categories = Category::all();
+            Redis::set('categories.all', json_encode($categories));
         }
+
+        return response()->json($categories);
     }
 
     public function show($id)
     {
-        //long: using redis::get/set
-        // $cachedCategory = Redis::get("category.$id");
+        $cachedCategory = Redis::get("category.$id");
 
-        // if ($cachedCategory) {
-        //     $category = json_decode($cachedCategory, true);
-        // } else {
-        //     $category = Category::find($id);
-        //     if (!$category) {
-        //         throw new EntityNotFoundException('Category');
-        //     }
-        //     Redis::set("category.$id", json_encode($category));
-        // }
-
-        // short using redis::remember (expires in 60 seconds)
-        try {
-            // Fetch the category from Redis or retrieve from repository if not cached
-            $category = Redis::remember("category.$id", 60 * 60, function () use ($id) {
-                $category = $this->categoryRepository->findCategoryById($id);
-
-                if (!$category) {
-                    throw new EntityNotFoundException('Category');
-                }
-
-                return $category;
-            });
-
-            return response()->json($category, 200);
-        } catch (\Exception $e) {
-            throw new DatabaseException("Failed to retrieve category");
+        if ($cachedCategory) {
+            $category = json_decode($cachedCategory, true);
+        } else {
+            $category = Category::find($id);
+            if (!$category) {
+                throw new EntityNotFoundException('Category');
+            }
+            Redis::set("category.$id", json_encode($category));
         }
+
+        return response()->json($category);
     }
 
     public function store(Request $request)
     {
-        $validator = CategoryValidatorService::validateCreateRequest($request);
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+        ]);
 
         if ($validator->fails()) {
-            // Throw a custom validation exception if validation fails
-            // throw new ValidationException($validator->errors()->all());
-
-            // OR
-            return response()->json($validator->errors(), 422);
+            throw new ValidationException($validator->errors()->all());
         }
 
         try {
-            // Create the category using the repository
-            $category = $this->categoryRepository->createCategory($request->all());
-
+            $category = Category::create($request->all());
             // Clear cache for all categories
             Redis::del('categories.all');
         } catch (\Exception $e) {
-            // Throw a custom database exception if an error occurs during creation
             throw new DatabaseException("Failed to create category");
         }
 
@@ -115,31 +72,25 @@ class CategoryController extends Controller
 
     public function update(Request $request, $id)
     {
-        $validator = CategoryValidatorService::validateCreateRequest($request);
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+        ]);
 
         if ($validator->fails()) {
-            // Throw a custom validation exception if validation fails
-            // throw new ValidationException($validator->errors()->all());
-
-            // OR
-            return response()->json($validator->errors(), 422);
+            throw new ValidationException($validator->errors()->all());
         }
 
-        $category = $this->categoryRepository->findCategoryById($id);
+        $category = Category::find($id);
         if (!$category) {
-            // Throw a custom exception if the category is not found
             throw new EntityNotFoundException('Category');
         }
 
         try {
-            // Update the category using the repository
-            $category->updateCategory($validator->validated());
-
+            $category->update($request->all());
             // Clear cache for the updated category and all categories
             Redis::del("category.$id");
             Redis::del('categories.all');
         } catch (\Exception $e) {
-            // Throw a custom database exception if an error occurs during the update
             throw new DatabaseException("Failed to update category");
         }
 
@@ -148,26 +99,23 @@ class CategoryController extends Controller
 
     public function destroy($id)
     {
+        $category = Category::find($id);
+        if (!$category) {
+            throw new EntityNotFoundException('Category');
+        }
+
+        // Check if the user is authorized to delete the category
+        // This will work only after Authorization is developed
+        // if (Auth::user()->cannot('delete', $category)) {
+        //     throw new AuthorizationException("You are not authorized to delete this category");
+        // }
+
         try {
-
-            $category = $this->categoryRepository->findCategoryById($id);
-            
-            if (!$category) {
-                throw new EntityNotFoundException('Category');
-            }
-
-            // Check if the user is authorized to delete the category
-            // This will work only after Authorization is developed
-            // if (Auth::user()->cannot('delete', $category)) {
-            //     throw new AuthorizationException("You are not authorized to delete this category");
-            // }
-            
-            // Delete the category using the repository
-            $this->categoryRepository->deleteCategory($id);
+            $category->delete();
 
             // Clear cache for the deleted category and all categories
-            Redis::del("category.$id");
-            Redis::del('categories.all');
+            // Redis::del("category.$id");
+            // Redis::del('categories.all');
 
             // Send email
             $emailData = [
@@ -178,10 +126,6 @@ class CategoryController extends Controller
             // Do not send attachments with $attachments and assign to a $attachments variable to the below class and they will be read automtically by Laravel
             // If you want to send attachments from here, add them to the $emailData variable
             Mail::to('tempmail@gmail.com')->send(new SendCategoryDeleteEmail($emailData));
-                
-            // return response()->json(['message' => 'Category deleted successfully'], 200);
-            // OR
-            return response()->json(null, 204);
         } catch (DatabaseException $e) {
             // Handle DatabaseException specifically
             throw new DatabaseException("Failed to delete category: " . $e->getMessage(), $e->getCode(), $e);
@@ -189,6 +133,8 @@ class CategoryController extends Controller
             // Handle any other exceptions
             throw new \Exception("Failed to delete category: " . $e->getMessage(), $e->getCode(), $e);
         }
+
+        return response()->json(['message' => 'Category deleted successfully'], 200);
     }
 
     // Eager load categories with their posts in one query

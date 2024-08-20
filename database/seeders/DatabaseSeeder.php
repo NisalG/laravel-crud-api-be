@@ -3,6 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Country;
+use App\Models\Category;
+
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -18,6 +21,14 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+        ]);
+
+        Country::factory()->create([
+            'name' => 'Sri Lanka',
+        ]);
+
+        Category::factory()->create([
+            'name' => 'Default Category',
         ]);
     }
 }

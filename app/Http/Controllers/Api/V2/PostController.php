@@ -12,9 +12,18 @@ use OpenApi\Attributes as OA;
 use App\Swagger\Schemas;
 use App\Http\Resources\PostResource;
 use App\Jobs\SendPostUpdatedEmailJob;
+use App\Services\PostValidatorService;
+use App\Contracts\PostRepositoryInterface;
 
 class PostController extends Controller
 {
+    protected $postRepository;
+
+    public function __construct(PostRepositoryInterface $postRepository)
+    {
+        $this->postRepository = $postRepository;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -57,7 +66,7 @@ class PostController extends Controller
 
         // With using API resource
         try {
-            $posts = Post::all();
+            $posts = $this->postRepository->getAllPosts();
 
             // Check if posts are retrieved successfully
             if ($posts->isEmpty()) {
@@ -67,90 +76,6 @@ class PostController extends Controller
             return PostResource::collection($posts);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to retrieve posts', 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    /**
-     * @OA\Post(
-     *     path="/api/posts",
-     *     summary="Store a newly created post",
-     *     tags={"Posts"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/CreatePost")
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Successful operation",
-     *         @OA\JsonContent(ref="#/components/schemas/Post")
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Unprocessable Entity",
-     *         @OA\JsonContent(
-     *             @OA\Schema(
-     *                 type="object",
-     *                 @OA\Property(property="message", type="string"),
-     *                 @OA\Property(property="errors", type="object")
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function store(Request $request)
-    {
-        // Define validation rules
-        $rules = [
-            'title' => 'required|max:255',
-            'slug' => 'required|alpha_dash|min:5|max:255|unique:posts,slug', // Unique slug validation
-            'category_id' => 'required|integer',
-            'content' => 'required',
-            'published_at' => 'required|date'
-        ];
-
-        // Validate the request data
-        $validator = Validator::make($request->all(), $rules);
-
-        // Check for validation errors
-        if ($validator->fails()) {
-            // Log the validation errors for debugging
-            Log::debug('Validation failed', $validator->errors()->toArray());
-            return response()->json($validator->errors(), 422); // Unprocessable Entity
-        }
-
-        try {
-            // Create a new Post instance
-            $post = new Post;
-
-            // Assign data to the Post model
-            $post->title = $request->input('title');
-            $post->slug = $request->input('slug');
-            $post->category_id = $request->input('category_id');
-            $post->content = $request->input('content');
-            $post->published_at = $request->input('published_at');
-            $post->user_id = $request->input('user_id');
-
-            // Save the Post to the database
-            $post->save();
-
-            // Without using API resource
-            // Return a successful response with the created Post data
-            // return response()->json($post, 201); // Created
-
-            // With using API resource
-            // $post = Post::create($post);
-            // return new PostResource($post);
-
-            return response()->json(new PostResource($post), 201); // Created
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create post', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -215,12 +140,62 @@ class PostController extends Controller
 
         // With using API resource
         try {
-            $post = Post::findOrFail($id);
+            $post = $this->postRepository->getPostById($id);
             return new PostResource($post);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['error' => 'Post not found'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to retrieve post', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    /**
+     * @OA\Post(
+     *     path="/api/posts",
+     *     summary="Store a newly created post",
+     *     tags={"Posts"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/CreatePost")
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Successful operation",
+     *         @OA\JsonContent(ref="#/components/schemas/Post")
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Unprocessable Entity",
+     *         @OA\JsonContent(
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(property="message", type="string"),
+     *                 @OA\Property(property="errors", type="object")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function store(Request $request)
+    {
+        $validator = PostValidatorService::validateCreateRequest($request);
+        if ($validator->fails()) {
+            Log::debug('Validation failed', $validator->errors()->toArray());
+            return response()->json($validator->errors(), 422);
+        }
+
+        try {
+            $post = $this->postRepository->createPost($validator->validated());
+            return response()->json(new PostResource($post), 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to create post', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -292,35 +267,15 @@ class PostController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // dd($request->all());
         try {
-            $post = Post::findOrFail($id);
+            $post = $this->postRepository->getPostById($id);
 
-            $validator = Validator::make($request->all(), [
-                'title' => 'required|string|max:255',
-                'slug' => 'required|string|unique:posts,slug,' . $post->id, // Update validation for unique slug excluding current post
-                'meta_title' => 'nullable|string',
-                'meta_des' => 'nullable|string',
-                'content' => 'required|string',
-                'featured_image_name' => 'nullable|string',
-                'image_size' => 'nullable|string',
-                'image_alt' => 'nullable|string',
-                'share_image' => 'nullable|json',
-                'share_image_video_url' => 'nullable|string',
-                'category_id' => 'nullable|integer',
-                'published_at' => 'nullable|date_format:Y-m-d H:i:s', // Added published_at validation
-                'published' => 'boolean',
-            ]);
-
+            $validator = PostValidatorService::validateUpdateRequest($request, $post->id);
             if ($validator->fails()) {
                 return response()->json($validator->errors(), 422);
             }
 
-            // Use validated fields only
-            $validatedData = $validator->validated();
-
-            // Update the post
-            $post->update($validatedData);
+            $updatedPost = $this->postRepository->updatePost($post, $validator->validated());
 
             // Send email using Queued Jobs
             // Dispatching (pushing the job to queue) a Job. This will add to jobs table
@@ -328,7 +283,7 @@ class PostController extends Controller
             $email = 'UWY0J@example.com';
             SendPostUpdatedEmailJob::dispatch($email);
 
-            return new PostResource($post);
+            return new PostResource($updatedPost);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['error' => 'Post not found'], 404);
         } catch (\Exception $e) {
@@ -404,8 +359,10 @@ class PostController extends Controller
 
         // With using API resource
         try {
-            $post = Post::findOrFail($id);
-            $post->delete();
+            $post = $this->postRepository->getPostById($id);
+            $this->postRepository->deletePost($post);
+
+            // return response()->noContent();
             return response()->json(['message' => 'Post deleted successfully'], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['error' => 'Post not found'], 404);
@@ -482,6 +439,7 @@ class PostController extends Controller
      */
     public function getAnswers(Request $request)
     {
+
         // Define validation rules
         $validator = Validator::make($request->query(), [
             'faq' => 'required|string|min:3|max:255'
@@ -494,6 +452,7 @@ class PostController extends Controller
 
         // Get the validated 'faq' parameter
         $faq = $request->query('faq');
+        // dd($faq);
 
         // $results = DB::select(
         //     "SELECT content, MATCH(content) AGAINST(? IN NATURAL LANGUAGE MODE) AS relevance
@@ -509,8 +468,6 @@ class PostController extends Controller
             ->addBinding([$faq], 'select')
             ->orderByDesc('relevance')
             ->get();
-
-
 
         return response()->json($results);
     }

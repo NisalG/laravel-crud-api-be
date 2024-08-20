@@ -10,8 +10,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
 use App\Swagger\Schemas;
+use App\Http\Resources\PostResource;
+use App\Jobs\SendPostUpdatedEmailJob;
 
-class PostController extends Controller
+class PostController_b4_refactoring extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -49,8 +51,23 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::all();
-        return response()->json($posts);
+        // Without using API resource
+        // $posts = Post::all();
+        // return response()->json($posts);
+
+        // With using API resource
+        try {
+            $posts = Post::all();
+
+            // Check if posts are retrieved successfully
+            if ($posts->isEmpty()) {
+                return response()->json(['message' => 'No posts found'], 404);
+            }
+
+            return PostResource::collection($posts);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to retrieve posts', 'message' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -108,21 +125,33 @@ class PostController extends Controller
             return response()->json($validator->errors(), 422); // Unprocessable Entity
         }
 
-        // Create a new Post instance
-        $post = new Post;
+        try {
+            // Create a new Post instance
+            $post = new Post;
 
-        // Assign data to the Post model
-        $post->title = $request->input('title');
-        $post->slug = $request->input('slug');
-        $post->category_id = $request->input('category_id');
-        $post->content = $request->input('content');
-        $post->published_at = $request->input('published_at');
+            // Assign data to the Post model
+            $post->title = $request->input('title');
+            $post->slug = $request->input('slug');
+            $post->category_id = $request->input('category_id');
+            $post->content = $request->input('content');
+            $post->published_at = $request->input('published_at');
+            $post->user_id = $request->input('user_id');
 
-        // Save the Post to the database
-        $post->save();
+            // Save the Post to the database
+            $post->save();
 
-        // Return a successful response with the created Post data
-        return response()->json($post, 201); // Created
+            // Without using API resource
+            // Return a successful response with the created Post data
+            // return response()->json($post, 201); // Created
+
+            // With using API resource
+            // $post = Post::create($post);
+            // return new PostResource($post);
+
+            return response()->json(new PostResource($post), 201); // Created
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to create post', 'message' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -177,13 +206,22 @@ class PostController extends Controller
      */
     public function show($id)
     {
-        $post = Post::find($id);
+        // Without using API resource
+        // $post = Post::find($id);
+        // if (!$post) {
+        //     return response()->json(['message' => 'Post not found'], 404);
+        // }
+        // return response()->json($post);
 
-        if (!$post) {
-            return response()->json(['message' => 'Post not found'], 404);
+        // With using API resource
+        try {
+            $post = Post::findOrFail($id);
+            return new PostResource($post);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Post not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to retrieve post', 'message' => $e->getMessage()], 500);
         }
-
-        return response()->json($post);
     }
 
     /**
@@ -254,34 +292,50 @@ class PostController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $post = Post::find($id);
+        // dd($request->all());
+        try {
+            $post = Post::findOrFail($id);
 
-        if (!$post) {
-            return response()->json(['message' => 'Post not found'], 404);
+            $validator = Validator::make($request->all(), [
+                'title' => 'required|string|max:255',
+                'slug' => 'required|string|unique:posts,slug,' . $post->id, // Update validation for unique slug excluding current post
+                'meta_title' => 'nullable|string',
+                'meta_des' => 'nullable|string',
+                'content' => 'required|string',
+                'featured_image_name' => 'nullable|string',
+                'image_size' => 'nullable|string',
+                'image_alt' => 'nullable|string',
+                'share_image' => 'nullable|json',
+                'share_image_video_url' => 'nullable|string',
+                'category_id' => 'nullable|integer',
+                'published_at' => 'nullable|date_format:Y-m-d H:i:s', // Added published_at validation
+                'published' => 'boolean',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            // Use validated fields only
+            $validatedData = $validator->validated();
+
+            // Update the post
+            $post->update($validatedData);
+
+            // Send email using Queued Jobs
+            // Dispatching (pushing the job to queue) a Job. This will add to jobs table
+            // $email = $post->author->email; // example
+            $email = 'UWY0J@example.com';
+            SendPostUpdatedEmailJob::dispatch($email);
+
+            return new PostResource($post);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Post not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to update post', 'message' => $e->getMessage()], 500);
         }
-
-        $validator = Validator::make($request->all(), [
-            'slug' => 'required|string|unique:posts,slug,' . $post->id, // Update validation for unique slug excluding current post
-            'meta_title' => 'nullable|string',
-            'meta_des' => 'nullable|string',
-            'content' => 'required|string',
-            'featured_image_name' => 'nullable|string',
-            'image_size' => 'nullable|string',
-            'image_alt' => 'nullable|string',
-            'share_image' => 'nullable|json',
-            'share_image_video_url' => 'nullable|string',
-            'category_id' => 'nullable|integer',
-            'published' => 'boolean',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $post->update($request->all());
-
-        return response()->json($post);
     }
+
 
     /**
      * Remove the specified resource from storage.
@@ -340,15 +394,24 @@ class PostController extends Controller
      */
     public function destroy($id)
     {
-        $post = Post::find($id);
+        // Without using API resource
+        // $post = Post::find($id);
+        // if (!$post) {
+        //     return response()->json(['message' => 'Post not found'], 404);
+        // }
+        // $post->delete();
+        // return response()->json(['message' => 'Post deleted successfully']);
 
-        if (!$post) {
-            return response()->json(['message' => 'Post not found'], 404);
+        // With using API resource
+        try {
+            $post = Post::findOrFail($id);
+            $post->delete();
+            return response()->json(['message' => 'Post deleted successfully'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Post not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to delete post', 'message' => $e->getMessage()], 500);
         }
-
-        $post->delete();
-
-        return response()->json(['message' => 'Post deleted successfully']);
     }
 
     /**
@@ -450,5 +513,21 @@ class PostController extends Controller
 
 
         return response()->json($results);
+    }
+
+    public function getPublishedPosts(Request $request)
+    {
+        $publishedPosts = Post::published()->get();
+        return response()->json($publishedPosts);
+    }
+
+    // Polymorphic Relationship usage sample - Adding a comment to a post.
+    // Also see CategoryController >> addCategoryComment - Adding a comment to a category.
+    public function addCategoryComment(Request $request)
+    {
+        $post = Post::find($request->post_id);
+        $post->comments()->create([
+            'body' => 'This is a comment on a post.',
+        ]);
     }
 }

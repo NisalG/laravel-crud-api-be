@@ -6,6 +6,10 @@ use Illuminate\Support\ServiceProvider;
 use App\Models\Post;
 use App\Observers\PostObserver;
 use Illuminate\Support\Facades\URL;
+use App\Contracts\PostRepositoryInterface;
+use App\Repositories\PostRepository;
+use App\Contracts\CategoryRepositoryInterface;
+use App\Repositories\CategoryRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,7 +18,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(PostRepositoryInterface::class, PostRepository::class);
+        $this->app->bind(CategoryRepositoryInterface::class, CategoryRepository::class);
     }
 
     /**

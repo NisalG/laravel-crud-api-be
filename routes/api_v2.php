@@ -30,7 +30,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 Route::group(['prefix' => 'posts', 'middleware' => 'auth:sanctum'], function () {
     Route::get('/', [PostController::class, 'index']);
     Route::post('/', [PostController::class, 'store']);
-    Route::get('/{id}', [PostController::class, 'show']);
+    Route::get('/{id}', [PostController::class, 'show'])->where('id', '[0-9]+');// Restrict to numeric ids to avoid clash with /answer route
     Route::put('/{id}', [PostController::class, 'update']);
     Route::delete('/{id}', [PostController::class, 'destroy']);
     Route::get('/answers', [PostController::class, 'getAnswers']);

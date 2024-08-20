@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Contracts\PostRepositoryInterface;
 
 class Post extends Model
 {
@@ -54,17 +53,5 @@ class Post extends Model
     public function user() // belongsTo relationship - for hasManyThrough
     {
         return $this->belongsTo(User::class);
-    }
-
-    // Define a repository interface to follow DIP
-    public function setPostRepository(PostRepositoryInterface $postRepository)
-    {
-        $this->postRepository = $postRepository;
-    }
-
-    // Implement any additional methods or logic through the repository
-    public function someBusinessLogic()
-    {
-        return $this->postRepository->performBusinessLogic($this);
     }
 }

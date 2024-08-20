@@ -109,14 +109,22 @@
     - CI/CD with buildspec.yml (AWS CodeBuild, Pipeline, Elasticbeanstalk, IAM, S3 will be used)
     - Elasticbeanstalk Extensions (.ebexensions)
 
-- **Notifications** - ToDo
-    - Events
-    - Listeners
-    - Queueable
-    - ServiceProvider
-    - DB tables
+- **Events & Listeners:**
 
-- **Event Broadcasting (WebSockets)** - ToDo
+
+- **Event Broadcasting (WebSockets)**
+
+
+- **Notifications** 
+
+
+- **Clean Code Architecture**
+
+
+- **Domain-Driven Design (DDD)**
+
+
+- **SOLID Principles**
 
 ---
 
@@ -155,6 +163,10 @@
         - Run all: `php artisan test`
         - To run a specific test class, provide the path to the test file: `php artisan test --filter ExampleTest`
         - Run a Specific Test Method: `php artisan test --filter 'ExampleTest::testBasicExample'`
+    - Testing database settings should be given in phpunit.xml:
+        Default is `sqlite`. If you want to configure a different MySQL DB config it as:
+        `<env name="DB_CONNECTION" value="mysql"/>`
+        `<env name="DB_DATABASE" value="test_database"/>`
     - Enable Detailed Error Messages in Tests:
         - Check Log files
         - Update phpunit.xml: `<env name="APP_DEBUG" value="true"/>`
@@ -162,9 +174,26 @@
         - Modify the exception handling in the TestCase class to throw exceptions instead of rendering them. See `tests\TestCase.php`
     - Post Controller testing:
         - `php artisan make:factory PostFactory --model=Post`
+        - Category entity changes:
+            - Also need to create CategoryFactory since a category_id is required to create a Post in PostFactory: `php artisan make:factory CategoryFactory --model=Category`
+            - Change Category creation migration file's name by changing the date manually to a date before Post creation migration file's name
+            - Run `php artisan migrate:fresh`
+        - Country entity changes: 
+            - Also need to create CountryFactory since a country_id is required to create a User in UserFactory: `php artisan make:factory CountryFactory --model=Country`
         - Change `database\factories\PostFactory.php`
         - Make sure the Post model uses the HasFactory trait.
         - Test: `php artisan test --filter 'PostControllerTest::it_can_list_all_posts'`
+        - Testing `it_can_search_answers_by_faq()`: 
+            - Since default is `sqlite`, FullText index will not work and `app\Http\Controllers\Api\V2\PostController.php` > `getAnswers()` query testing will not work as expected
+            - Check if fultext is anabled in `content` column. If empty that means not enabled:
+            `info('index: ' , DB::select('SHOW INDEX FROM posts WHERE Key_name = "content"'));`
+            - If you do a basic query like this, it will work.
+                ```$results = DB::table('posts')
+                        ->select('content')
+                        ->where('content', 'LIKE', '%' . $faq . '%')
+                        ->get();
+                ```
+            - Therefore this test will not pass with our test DB settings right now. 
     - Mocking External (Third Party) APIs and Services (CoinGecko Cryptocurrency Data API)
         - Create a Service for CoinGecko API: `app/Services/CoinGeckoService.php`
         - Create a Controller: `app/Http/Controllers/CoinGeckoController.php`
@@ -904,7 +933,10 @@
                         group: Sets the file group to root.
                         content: Defines the cron job schedule and command to execute. The cron expression * * * * * runs the command every minute. The command webapp php /var/www/html/artisan schedule:run >> /var/log/schedule_debug.log 2>&1 executes the Laravel scheduler (artisan schedule:run) using the webapp user, redirects standard output and error to the /var/log/schedule_debug.log file for debugging
 
--**Laravel Events & Listeners Overview:**
+---
+
+
+- **Events & Listeners:**
 
 Events in Laravel allow you to implement the observer pattern, where events are dispatched, and multiple listeners can respond to them, promoting loose coupling in your application.
 
@@ -994,6 +1026,7 @@ Events in Laravel allow you to implement the observer pattern, where events are 
 
     - Register in AppServiceProvider using `Event::subscribe()`.
 
+- **Event Broadcasting (WebSockets)** - ToDo
 
 - **Notifications** - ToDo
     - Events
@@ -1002,9 +1035,89 @@ Events in Laravel allow you to implement the observer pattern, where events are 
     - ServiceProvider
     - DB tables
 
-- **Event Broadcasting (WebSockets)** - ToDo
+---
+
+
+- **Clean Code Architecture**
+    - **Purpose:**
+        - Focuses on maintainable, scalable, and testable software.
+        - Emphasizes separation of concerns, modularity, and clear boundaries.
+    - **Core Principles:**
+        - **Separation of Concerns:**
+            - Divides responsibilities into distinct layers.
+        - **Dependency Inversion:**
+            - High-level modules depend on abstractions: Abstractions are generalized interfaces or abstract classes that define behavior without specifying implementation, allowing flexibility, testability, and maintainability by decoupling high-level modules from specific low-level details.
+            - High-level modules do not depend on low-level details.
+        - **Modularity:**
+            - System divided into reusable and maintainable modules.
+        - **Testability:**
+            - Supports easy testing of individual components.
+    - **Components:**
+        - **Entities:** Core business objects with business rules.
+        - **Use Cases:** Define application-specific business logic.
+        - **Interface Adapters:** Manage communication between layers.
+        - **Frameworks & Drivers:** External components isolated from core logic.
+    - **Layered Architecture:**
+        - Inner layers (Entities, Use Cases) are more stable.
+        - Outer layers (Interface Adapters, Frameworks) are easier to change.
+    - **Boundaries:**
+        - Clear boundaries using interfaces or abstractions for flexibility.
+    - **DRY (Don't Repeat Yourself):**
+        - Avoid code duplication. Write reusable functions and modules. This improves code maintainability and reduces errors.
+    - **KISS (Keep It Simple, Stupid):**
+        - Prioritize simplicity in code design. Avoid unnecessary complexity. Write clear and easy-to-understand code. This enhances readability and reduces development time.
 
 ---
+
+
+- **Domain-Driven Design (DDD)**
+    
+    DDD structures and designs software systems around the core business domain.
+    - **Benefits of DDD:**
+        - **Alignment with Business Needs:**
+            Reflects the real-world domain, enhancing collaboration between developers and domain experts.
+        - **Improved Communication:**
+            Promotes a shared language (Ubiquitous Language) between stakeholders, reducing misunderstandings.
+        - **Focus on Core Domain:**
+            Prioritizes critical business aspects, ensuring efficient resource use. Ensures alignment with business goals.
+        - **Easier Maintenance:**
+            Organizes code around domain concepts, simplifying long-term management.
+        - **Enhanced Modularity:**
+            Breaks down systems into well-defined components, improving flexibility and modularity. Enhances separation of concerns and modularity.
+        - **Scalability:**
+            Allows independent scaling of system parts based on business needs.
+        - **Framework Independence:**
+            Enables easy changes or updates to frameworks (e.g., Laravel, Express) without affecting core business logic.
+    - **Relation to Clean Code Architecture:**
+        It aligns well with the Clean Code Architecture's emphasis on separation of concerns and modularity, but they are not strictly "parts" of it.
+
+---
+
+
+- **SOLID Principles**
+
+    The SOLID principles are a set of guidelines for designing software components that are easy to maintain, extend, and understand.
+
+    - Principles:
+        - **Single-Responsibility Principle:** Each class should given one responsibility and have only one reason to change
+
+        - **Open-Closed Principle:** A class should be open for extension but closed for modification
+
+        - **Liskov Substitution Principle:** Each base class can be replaced by its subclasses
+
+        - **Interface Segregation Principle:** You should have many small interfaces instead of a few huge ones
+
+        - **Dependency Inversion Principle:** Depend upon abstraction, not on concrete implementation
+
+    - Relation to Clean Code Architecture: 
+        SOLID principles are closely related to Clean Code Architecture, but they are not strictly "parts" of it. Instead, they complement and support Clean Code Architecture in achieving its goals of maintainability, scalability, and testability. Examples: 
+        - Single Responsibility Principle (SRP) supports modularity and separation of concerns.
+        - Dependency Inversion Principle (DIP) is integral to the architecture's emphasis on dependency management and abstraction.
+
+---
+
+
+
 
 # How to run the application 
 - Install required Composer packages using: `composer i`
@@ -1012,6 +1125,7 @@ Events in Laravel allow you to implement the observer pattern, where events are 
 - Run migration: `php artisan migrate`
 - Run seeder: `php artisan db:seed`
 - Run application locally: `php artisan serve`
+- Test user: `test@example.com` | `Abc@123`
 - Postman collection useful for testing the API end points is available in `postman-collection` directory
 - Access Swagger API Documentation URL: `http://your-app-url/api/documentation`
 

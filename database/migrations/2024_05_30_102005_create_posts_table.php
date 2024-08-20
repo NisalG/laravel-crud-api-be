@@ -31,8 +31,9 @@ return new class extends Migration
             $table->string('video_url')->nullable();
             $table->unsignedBigInteger('category_id')->default(1); // 1 = uncategorized - if CSV doesn't have a category, default to uncategorized
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
+            // $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->boolean('published')->default(false);
-            $table->dateTime('published_at');
+            $table->timestamp('published_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

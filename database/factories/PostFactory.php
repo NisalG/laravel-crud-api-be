@@ -4,6 +4,8 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\Post;
+use App\Models\Category;
+use App\Models\User;
 use Illuminate\Support\Str;
 
 /**
@@ -20,12 +22,17 @@ class PostFactory extends Factory
      */
     public function definition(): array
     {
+        $title = $this->faker->sentence;
+
         return [
-            'title' => $this->faker->sentence,
-            'slug' => $this->faker->slug,
-            'category_id' => $this->faker->numberBetween(1, 10),
+            'title' => $title,
+            // 'slug' => $this->faker->slug,
+           'slug' => Str::slug($title),
+            // 'category_id' => $this->faker->numberBetween(1, 10),
+            'category_id' => Category::factory(),
+            'user_id' => User::factory(), // Assigns a user to the post
             'content' => $this->faker->text,
-            'published_at' => $this->faker->dateTime,
+            'published_at' => $this->faker->dateTime->format('Y-m-d H:i:s'),
         ];
     }
 }
