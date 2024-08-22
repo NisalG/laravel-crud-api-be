@@ -23,8 +23,11 @@ class PostsTableSeeder extends Seeder
      */
     public function run(): void
     {
-        // Truncate the posts table before populating it with new data
-        Post::query()->truncate();
+        // Truncate the posts table before populating it with new data.
+        // This will not work if the posts table has foreign keys related to other tables like post_tags. Use delete() instead.
+        // Post::query()->truncate();
+
+        Post::query()->delete();
         Log::info('Truncated posts table before seeding.'); // Log truncation
 
         $csvData = $this->getCsvData();
@@ -44,11 +47,19 @@ class PostsTableSeeder extends Seeder
                 Log::warning('Skipped row: id is not numeric.'); // Log warning
                 continue;
             }
+            
+            //skip if empty slug
+            if (empty($row['slug'])) {
+                $reason = "Empty slug";
+                echo "Skipping row: $reason. \n";
+                Log::warning('Skipped row: ' . $reason); // Log warning
+                continue;
+            }
 
-            // Slug is not unique issue handling
-            // Method2: Skip if slug is empty or already exists
-            if (empty($row['slug']) || Post::where('slug', $row['slug'])->exists()) {
-                $reason = empty($row['slug']) ? "Empty slug" : "Duplicate slug '" . $row['slug'] . "'";
+            // skip if duplicate slugs in the database
+            $existingPost = Post::where('slug', $row['slug'])->first();
+            if ($existingPost) {
+                $reason = "Duplicate slug '" . $row['slug'] . "' found for Post ID: " . ($existingPost ? $existingPost->id : 'N/A');
                 echo "Skipping row: $reason. \n";
                 Log::warning('Skipped row: ' . $reason); // Log warning
                 continue;

@@ -11,6 +11,8 @@ use Database\Seeders\PostsTableSeeder;
 use Carbon\Carbon;
 use Mockery;
 use Illuminate\Support\Str;
+use App\Models\User;
+use App\Models\Category;
 
 class PostsTableSeederTest extends TestCase
 {
@@ -87,9 +89,12 @@ class PostsTableSeederTest extends TestCase
      */
     public function testValidCsvData()
     {
+        $category =Category::factory()->create();
+        $user = User::factory()->create();
+
         $csvData = [
-            ['id' => 1, 'title' => 'Test Post 1', 'slug' => Str::slug('Test Post 1'), 'content' => 'This is a test post', 'published' => false, 'published_at' => Carbon::now()->toDateTimeString()],
-            ['id' => 2, 'title' => 'Test Post 2', 'slug' => Str::slug('Test Post 2'), 'content' => 'This is another test post', 'published' => false, 'published_at' => Carbon::now()->toDateTimeString()],
+            ['id' => 1, 'title' => 'Test Post 1', 'slug' => Str::slug('Test Post 1'), 'content' => 'This is a test post', 'published' => false, 'published_at' => Carbon::now()->toDateTimeString(), 'user_id' => $user->id, 'category_id' => $category->id],
+            ['id' => 2, 'title' => 'Test Post 2', 'slug' => Str::slug('Test Post 2'), 'content' => 'This is another test post', 'published' => false, 'published_at' => Carbon::now()->toDateTimeString(), 'user_id' => $user->id, 'category_id' => $category->id],
         ];
 
         // Create a mock instance of the seeder
@@ -113,6 +118,9 @@ class PostsTableSeederTest extends TestCase
      */
     public function testInvalidCsvDataNonNumericId()
     {
+        $category =Category::factory()->create();
+        $user = User::factory()->create();
+
         $csvData = [
             ['id' => 'abc', 'title' => 'Test Post 1', 'content' => 'This is a test post'],
             [
@@ -122,6 +130,7 @@ class PostsTableSeederTest extends TestCase
                 'content' => 'This is another test post',
                 'published' => false,
                 'published_at' => Carbon::now()->toDateTimeString(),
+                'user_id' => $user->id, 'category_id' => $category->id
             ],
         ];
 
@@ -146,9 +155,12 @@ class PostsTableSeederTest extends TestCase
      */
     public function testDuplicateSlug()
     {
+        $category =Category::factory()->create();
+        $user = User::factory()->create();
+
         $csvData = [
-            ['id' => 1, 'title' => 'Test Post', 'slug' => Str::slug('Test Post 1'), 'content' => 'This is a test post', 'published' => false, 'published_at' => Carbon::now()->toDateTimeString()],
-            ['id' => 2, 'title' => 'Another Test Post', 'slug' => Str::slug('Test Post 1'), 'content' => 'This is another test post', 'published' => false, 'published_at' => Carbon::now()->toDateTimeString()],
+            ['id' => 1, 'title' => 'Test Post', 'slug' => Str::slug('Test Post 1'), 'content' => 'This is a test post', 'published' => false, 'published_at' => Carbon::now()->toDateTimeString(), 'user_id' => $user->id, 'category_id' => $category->id],
+            ['id' => 2, 'title' => 'Another Test Post', 'slug' => Str::slug('Test Post 1'), 'content' => 'This is another test post', 'published' => false, 'published_at' => Carbon::now()->toDateTimeString(), 'user_id' => $user->id, 'category_id' => $category->id],
         ];
 
         // Create a mock instance of the seeder
@@ -156,9 +168,16 @@ class PostsTableSeederTest extends TestCase
 
         // Mock the getCsvData method to return above CSV data
         $seeder->shouldReceive('getCsvData')->andReturn($csvData);
-        $seeder->run();
 
+        // Run the seeder
+        $seeder->run();
+    
+        // Assertions
+        // Ensure only one record is created due to the unique slug constraint
         $this->assertCount(1, Post::all());
+    
+        // Additionally, verify the inserted record's slug matches the expected one
+        $this->assertEquals('test-post-1', Post::first()->slug);
     }
 
     /**
@@ -168,8 +187,11 @@ class PostsTableSeederTest extends TestCase
      */
     public function testEmptyContentField()
     {
+        $category =Category::factory()->create();
+        $user = User::factory()->create();
+
         $csvData = [
-            ['id' => 1, 'title' => 'Test Post', 'slug' => Str::slug('Test Post 1'), 'content' => '', 'published' => false, 'published_at' => Carbon::now()->toDateTimeString()],
+            ['id' => 1, 'title' => 'Test Post', 'slug' => Str::slug('Test Post 1'), 'content' => '', 'published' => false, 'published_at' => Carbon::now()->toDateTimeString(), 'user_id' => $user->id, 'category_id' => $category->id],
         ];
 
         // Create a mock instance of the seeder
@@ -210,6 +232,9 @@ class PostsTableSeederTest extends TestCase
     // }
     public function testInvalidDateFormat()
     {
+        $category =Category::factory()->create();
+        $user = User::factory()->create();
+
         $csvData = [
             [
                 'id' => 1,
@@ -219,6 +244,7 @@ class PostsTableSeederTest extends TestCase
                 'published' => false,
                 'published_at' => Carbon::now()->toDateTimeString(),
                 'created_at' => 'invalid_date_format',
+                'user_id' => $user->id, 'category_id' => $category->id
             ],
         ];
 

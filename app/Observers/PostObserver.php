@@ -10,7 +10,7 @@ class PostObserver
     public function creating(Post $post)
     {
         // Automatically set the slug attribute before creating a post
-        $post->slug = Str::slug($post->title);
+        $post->slug = Str::slug($post->slug);
     }
 
     public function updating(Post $post)

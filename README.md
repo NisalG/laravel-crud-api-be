@@ -158,6 +158,8 @@
         - `docker exec -it <container_id> bash` (enter running container)
         - `docker commit <container_id> <new_image_name>` (create new image from container)
 - **Unit & Feature Testing (TDD)**
+    - Mockery to create mock objects for testing dependencies etc.
+    - Faker to fake data like text, datetime, country etc.
     - Common commands:
         - Make: `php artisan make:test FaqsTableSeederTest`
         - Run all: `php artisan test`
@@ -203,6 +205,9 @@
         - Create Unit Test Cases for the Service: `tests/Unit/CoinGeckoServiceTest.php`
         - Create Feature Test Cases for the Controller: `tests/Feature/CoinGeckoControllerTest.php`
         - Run the Tests: `php artisan test` 
+    - Mockery to create mock objects for testing dependencies etc. in `tests\Unit\PostsTableSeederTest.php`
+        - `php artisan test --filter 'PostsTableSeederTest::testMissingCsvFile'`
+
 - **Service Container and Service Providers**
     - Service Class: `app/Services/AWSService.php`
     - Service Provider: 
@@ -1098,7 +1103,7 @@ Events in Laravel allow you to implement the observer pattern, where events are 
 
     The SOLID principles are a set of guidelines for designing software components that are easy to maintain, extend, and understand.
 
-    - Principles:
+    - **Principles:**
         - **Single-Responsibility Principle:** Each class should given one responsibility and have only one reason to change
 
         - **Open-Closed Principle:** A class should be open for extension but closed for modification
@@ -1109,10 +1114,60 @@ Events in Laravel allow you to implement the observer pattern, where events are 
 
         - **Dependency Inversion Principle:** Depend upon abstraction, not on concrete implementation
 
-    - Relation to Clean Code Architecture: 
+    - **Relation to Clean Code Architecture:**
         SOLID principles are closely related to Clean Code Architecture, but they are not strictly "parts" of it. Instead, they complement and support Clean Code Architecture in achieving its goals of maintainability, scalability, and testability. Examples: 
         - Single Responsibility Principle (SRP) supports modularity and separation of concerns.
         - Dependency Inversion Principle (DIP) is integral to the architecture's emphasis on dependency management and abstraction.
+
+    - **How SOLID principles were implemented in the Advance CRUD BE:**
+
+        Note: 
+        The **Repository Design Pattern** is used to abstract the data access layer of an application. 
+        It acts as a mediator between the domain and data mapping layers, such as a database or an API, providing a consistent and organized way to access, manipulate, and retrieve data.
+        It abstracts the data access logic for the `Post` & `Category` entities in here. 
+
+        - **PostRepositoryInterface:** Defines the contract for post-related operations.
+        - **PostRepository:** Implements the interface, encapsulating the data access logic.
+        - **Service Provider:** Binds the interface to the concrete implementation, enabling dependency injection. So Laravel knows which class (e.g.: PostRepository) to instantiate when a certain interface (e.g.: PostRepositoryInterface) is injected.
+        - **Controller & Models:** Uses the repository interface, adhering to the Dependency Inversion Principle.
+
+        1. **Single Responsibility Principle (SRP) implementation:**
+
+            - **PostRepositoryInterface:** This interface ensures that each repository has a single responsibility related to handling `Post` entities. It separates concerns by isolating the data access logic from other parts of the application.
+            - **PostRepository:** This class implements the `PostRepositoryInterface`, handling all CRUD operations related to the `Post` model. It ensures that each class or module has one, and only one, reason to change.
+
+        2. **Open/Closed Principle (OCP) implementation:**
+
+            The `PostRepositoryInterface` allows the `PostRepository` class to be open for extension but closed for modification. If additional behavior is required, you can extend or implement the interface in a new class without altering the existing `PostRepository` code.
+
+        3. **Liskov Substitution Principle (LSP) implementation:**
+
+            By using the `PostRepositoryInterface` in the `PostController`, any implementation of this interface (like `PostRepository`) can be substituted without altering the functionality of the controller. This adheres to the LSP, ensuring that derived classes can replace base classes without affecting the application's correctness.
+
+        4. **Interface Segregation Principle (ISP) implementation:**
+
+            The `PostRepositoryInterface` is designed to be focused on specific methods related to the `Post` model. This ensures that classes implementing this interface are not forced to implement methods they don't use. Although the interface in this case is quite broad, it can still be considered under ISP as it is not forcing unnecessary methods on unrelated classes.
+
+        5. **Dependency Inversion Principle (DIP) implementation:**
+
+            The `PostController` depends on the `PostRepositoryInterface` rather than a concrete class. This follows the DIP by ensuring that high-level modules (controllers) do not depend on low-level modules (concrete repositories), but both depend on abstractions (interfaces).
+
+
+        - **File changes:**
+            - `Post` Entity
+                - Create the Interface `app/Contracts/PostRepositoryInterface.php`
+                - Create the Repository Implementation `app/Repositories/PostRepository.php`
+                - Changes to: `app\Providers\AppServiceProvider.php` >> `register()`
+                - Changes to: `app\Models\Post.php` to use PostRepositoryInterface
+                - Changes to: `app\Http\Controllers\Api\V2\PostController.php`
+            
+            - `Category` Entity
+                - Create the Interface `app\Contracts\CategoryRepositoryInterface`
+                - Create the Repository Implementation `app/Repositories/CategoryRepository.php`
+                - Changes to: `app\Providers\AppServiceProvider.php` >> `register()`
+                - Changes to: `app\Models\Category.php` to use CategoryRepositoryInterface
+                - Changes to: `app\Http\Controllers\Api\V2\CategoryController.php`
+
 
 ---
 
