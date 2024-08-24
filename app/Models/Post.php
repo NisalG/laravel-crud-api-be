@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Contracts\PostRepositoryInterface;
+use App\Traits\Likeable;
 
 class Post extends Model
 {
-    use HasFactory;
+    use HasFactory, Likeable;
 
     protected $fillable = [
         'title',
@@ -17,6 +18,8 @@ class Post extends Model
         'category_id',
         'user_id',
         'published_at',
+        'likes_count', // for the Likeable trait
+        'dislikes_count', // for the Likeable trait 
     ];
 
     public function category()

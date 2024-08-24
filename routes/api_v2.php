@@ -16,6 +16,10 @@ use App\Http\Middleware\RoleManagement;
 use App\Http\Middleware\LogUserActivity;
 use App\Http\Middleware\Localization;
 
+use App\Http\Controllers\Api\V2\AuthorController;
+use App\Services\EmailProviders\MailChimp;
+use App\Services\EmailProviders\SendGrid;
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
@@ -84,3 +88,6 @@ Route::get('/test-redis', function () {
     Cache::put('test-key', 'test-value', 10);
     return Cache::get('test-key');
 });
+
+Route::post('/subscribe/mailchimp', [AuthorController::class, 'subscribeToMailList'])->defaults('emailProvider', new MailChimp);
+Route::post('/subscribe/sendgrid', [AuthorController::class, 'subscribeToMailList'])->defaults('emailProvider', new SendGrid);

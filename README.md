@@ -940,22 +940,52 @@
 
 ---
 
+- **Events vs Notifications:**
+	- In Laravel, Events and Notifications are both powerful tools, but they serve different purposes and are used in different contexts.
+	- Key Differences:
+		- Purpose:
+			- Events: Used for handling actions that need to be processed in different parts of the system, often asynchronously.
+			- Notifications: Specifically designed for sending notifications to users across multiple channels.
 
-- **Events & Listeners:**
+		- Flexibility:
+			- Events: More flexible in terms of usage, can be used for anything from logging to triggering complex workflows.
+			- Notifications: Tailored for user notifications with built-in support for different channels.
 
-Events in Laravel allow you to implement the observer pattern, where events are dispatched, and multiple listeners can respond to them, promoting loose coupling in your application.
+		- Channels:
+			- Events: No built-in channels; you define how the event is handled.
+			- Notifications: Comes with built-in channels like mail, SMS, Slack, etc.
 
+		- Complexity:
+			- Events: Requires setting up both events and listeners, which can be more complex.
+			- Notifications: Easier to implement for user notifications, with less boilerplate code.
+	- Summary
+		Use Events when you need to decouple parts of your application or when you need to handle actions across multiple areas of your system. Use Notifications when you need to inform users about specific events that concern them, leveraging Laravel's built-in channels for delivery.
+
+
+---
+
+
+- **Events & Listeners: Event-Driven Architecture (EDA)**
+
+Events in Laravel allow you to implement the `Observer Pattern`, where events are dispatched, and multiple listeners can respond to them, promoting loose coupling in your application. In other words, decouples components of an application by using events as a communication mechanism.
+
+- Benefits:
+
+	- Improved scalability: Can handle high loads by distributing event processing.
+    - Flexibility: Easily add or remove event listeners without affecting core logic.
+    - Reusability: Event listeners can be reused in different contexts.
+    - Asynchronous processing: Can offload time-consuming tasks to background jobs, improving performance.
+	
 - Generating Events & Listeners:
     Use Artisan commands to create events and listeners:
     - `php artisan make:event EventName`
-
     - `php artisan make:listener ListenerName --event=EventName`
 
 - Registering Events & Listeners:
     - Automatic Registration:
-            Laravel automatically registers listeners by scanning the `Listeners` directory. Methods named `handle` or` __invoke` will be registered.
+            Laravel automatically registers listeners by scanning the `app/Listeners` directory. Methods named `handle` or` __invoke` will be registered.
     - Manual Registration:
-            Use the Event facade in `AppServiceProvider's` `boot()` method.
+            Use the `Event` facade in `AppServiceProvider` >> `boot()` method. Event listeners can be registered globally or within specific routes or controllers.
         ```
         Event::listen(
             EventName::class,
@@ -965,7 +995,7 @@ Events in Laravel allow you to implement the observer pattern, where events are 
 - Closure & Queueable Listeners:
 
     - Closure Listeners:
-        Can be defined directly in the boot method using the `Event::listen()` method.
+        Can be defined/register directly in the `AppServiceProvider` >> `boot()` method using the `Event::listen()` method.
     
     - Queueable Listeners:
         Wrap closures with `queueable` for executing via queue.
@@ -988,37 +1018,62 @@ Events in Laravel allow you to implement the observer pattern, where events are 
 - Defining Events & Listeners:
 
     - Event Class:
-        A simple data container that holds event-related information.
-        
+        A simple data container that holds event-related information. For example, an `OrderCreated` event might contain an `Order` instance.
+        `App\Events\OrderCreated.php`:
         ```
-        class OrderShipped
+		namespace App\Events;
+		   
+        class OrderCreated extends Event
         {
-            public function __construct(public Order $order) {}
+			use Dispatchable, InteractsWithSockets, SerializesModels;
+			
+			public $order;
+			   
+            public function __construct(public Order $order) 
+			{
+				$this->order = $order;
+			}
         }
         ```
 
     - Listener Class:
 
-        Handles the event logic in the `handle` method.
-    
+        Listeners handle events. They receive event instances in their `handle` method. You can perform actions based on the event data.
+		`App\Listeners\SendOrderConfirmationEmail.php`:
         ```
-        class SendShipmentNotification
+		namespace App\Listeners;
+		use App\Events\OrderCreated;
+		use Illuminate\Contracts\Queue\ShouldQueue;
+		
+        class SendOrderConfirmationEmail implements ShouldQueue
         {
-            public function handle(OrderShipped $event): void
+            public function handle(OrderCreated $event): void
             {
-                // Handle the event...
+                // Send confirmation email to the customer
+				Mail::to($event->order->customer->email)->send(new OrderConfirmationEmail($event->order));
             }
         }
         ```
 
 - Queued Event Listeners:
 
-    - Implement ShouldQueue interface to queue listeners.
+    - Events can be queued for asynchronous processing using `ShouldQueue` interface. Implement ShouldQueue interface to queue listeners for slow tasks. 
     - Customize queue behavior using `$connection`, `$queue`, and `$delay` properties or methods like `viaConnection` and `viaQueue`.
+	- Handling Failed Jobs: Use the `failed` method to handle listener failures. Define `$tries` or `retryUntil` to limit retries.
+	
+	
+- Dispatching Events
 
+	Use `Event::dispatch()` to dispatch/trigger an event. You can conditionally dispatch using `dispatchIf` or `dispatchUnless`.
+	In your controller action etc.:
+	```
+	// When an order is created
+	Event::dispatch(new OrderCreated($order));
+	```
+	
 - Event Subscribers:
 
-    Subscribers can listen to multiple events within a single class by defining event-handler methods.
+    Subscribers can listen to multiple events within a single class by defining event-handler methods. Define a subscribe method to register listeners.
     ```
     class UserEventSubscriber
     {
@@ -1030,16 +1085,148 @@ Events in Laravel allow you to implement the observer pattern, where events are 
     ```
 
     - Register in AppServiceProvider using `Event::subscribe()`.
+	
+- Notes:
+	- Use `php artisan event:list` to list registered listeners.
+	- Cache event listeners for performance using `optimize` or `event:cache`.
+	- Dispatch events after database transactions using `ShouldDispatchAfterCommit`.
+	- Consider using event sourcing for storing a complete history of events, enabling easier auditing and replay. Use `Spatie Laravel Event Sourcing` packag: https://spatie.be/index.php/docs/laravel-event-sourcing/v7/introduction
 
-- **Event Broadcasting (WebSockets)** - ToDo
 
-- **Notifications** - ToDo
-    - Events
-    - Listeners
-    - Queueable
-    - ServiceProvider
-    - DB tables
+---
 
+
+- **Event Broadcasting (WebSockets)** - ToDo in project
+
+
+---
+
+
+- **Notifications** - ToDo in project
+
+
+	**Introduction**
+
+    - Laravel provides notifications for various channels (`email, SMS, Slack,` etc.)
+    - Notifications are short messages informing users about application events.
+    - You can store notifications in the database for display in your app's UI.
+
+	**Generating Notifications**
+	- Each notification is represented by a class in `app/Notifications`.
+	- Use `php artisan make:notification InvoicePaid` to create a notification class.
+	- The notification class defines methods for different channels (e.g., `toMail`).
+
+	**Sending Notifications**
+	There are two ways to send notifications:
+	- Using `notify` method of the `Notifiable` trait on your models (e.g., `$user->notify(new InvoicePaid($invoice))`)
+	- Using the `Notification` facade to send to multiple recipients (e.g., `Notification::send($users, new InvoicePaid($invoice))`)
+
+	**Specifying Delivery Channels**
+	- The `via` method on the notification class specifies delivery channels (e.g., `mail`, `database`).
+	- Use `community` channels for `Telegram, Pusher,` etc.
+	- The `via` method receives the `$notifiable` instance to determine channels.
+
+	**Queueing Notifications**
+	- Sending notifications can take time, especially for external API calls.
+	- Use the `ShouldQueue` interface and `Queueable` trait to queue notifications.
+	- Laravel automatically queues notifications with the default queue connection.
+
+	**Customizing Notification Queues**
+	- You can specify a different queue or connection for each notification channel using `viaQueues` and `viaConnections` methods.
+
+	**On-Demand Notifications**
+
+	- Use the `Notification` facade's `route` method for sending notifications without a stored user.
+	- Specify channels and recipient information (`email, Slack channel name`, etc.)
+
+	**Mail Notifications**
+
+	- Define a `toMail` method to format the email message using `MailMessage`.
+	- `MailMessage` provides methods for lines of text, call to action buttons, etc.
+	- Customize `sender, recipient, subject, mailer` using methods on `MailMessage`.
+	- `Markdown` mail notifications allow for more customized message content.
+	- You can preview mail notifications directly from routes or controllers.
+
+	**Database Notifications**
+	- Create `notifications` table: `php artisan make:notifications-table` & `php artisan migrate`
+	- Define a `toDatabase` or `toArray` method to return a data array for storage.
+	- This data is encoded as `JSON` and stored in the database table.
+
+	**Accessing Notifications**
+
+	- Use `$user->notifications` to retrieve notifications for a user.
+	- `unreadNotifications` property returns unread notifications.
+	- Define a notification controller for access from JavaScript.
+
+	**Marking Notifications as Read**
+
+	- Use `markAsRead` method on a notification or collection.
+	- Mass update with update query.
+
+	**Broadcast Notifications**
+
+	- Requires Laravel's event broadcasting services.
+
+	**Formatting Broadcast Notifications**
+
+	- `toBroadcast` method defines broadcast data.
+	- `toArray` used as fallback.
+	- `onConnection` and `onQueue` methods configure queuing.
+
+	**Customizing the Notification Type**
+
+	- `broadcastType` method defines the type for broadcasts.
+
+	**Listening for Notifications**
+
+	- Use Laravel `Echo`'s notification method on a channel.
+	- `receivesBroadcastNotificationsOn` method for custom channel.
+
+	**SMS Notifications**
+
+	- Requires `laravel/vonage-notification-channel` and `guzzlehttp/guzzle` packages.
+	- Environment variables for `Vonage` keys and sender number.
+
+	**Formatting SMS Notifications**
+
+	- `toVonage` method defines the SMS message content.
+	- `unicode` method for unicode characters.
+	- `from` method to customize sender number.
+	- `clientReference` for cost tracking.
+
+	**Routing SMS Notifications**
+
+	- `routeNotificationForVonage` method defines routing logic.
+
+	**Slack Notifications**
+
+	- Requires `laravel/slack-notification-channel` package.
+	- Configure Slack App with necessary scopes and tokens.
+
+	**Formatting Slack Notifications**
+
+	- `toSlack` method defines the Slack message content using Block Kit API.
+	- Supports interactive elements with buttons and confirmation modals.
+	- Use `dd` method to inspect built blocks.
+
+	**Routing Slack Notifications**
+
+	- `routeNotificationForSlack` method defines routing logic.
+	- Supports internal channels, external workspaces (Slack Routes).
+
+	**Notifying External Slack Workspaces**
+
+	- Requires Slack App distribution.
+	- Use Laravel Socialite's Slack driver to obtain bot tokens.
+	- `SlackRoute::make` method to route to external workspaces.
+
+	**Other Important Points**
+	- Localization support for notifications.
+	- Testing notifications using `Notification` facade's `fake` method.
+	- Notification events for sending and sent notifications.
+	- Custom notification channels.
+		
+		
 ---
 
 
@@ -1121,52 +1308,78 @@ Events in Laravel allow you to implement the observer pattern, where events are 
 
     - **How SOLID principles were implemented in the Advance CRUD BE:**
 
-        Note: 
-        The **Repository Design Pattern** is used to abstract the data access layer of an application. 
-        It acts as a mediator between the domain and data mapping layers, such as a database or an API, providing a consistent and organized way to access, manipulate, and retrieve data.
-        It abstracts the data access logic for the `Post` & `Category` entities in here. 
+        - **Single Responsibility Principle (SRP) implementation:**
+            
+            **1. PostResource:** `app\Http\Resources\PostResource.php` to handle response formatting in a seperate class.
+            
+            **2. CreateUserRequest:** `app\Http\Requests\CreateUserRequest.php` to handle request validation in a seperate class.
+            
+            **3. PostValidatorService:** `app\Services\PostValidatorService.php` to handle validation in a seperate class.
 
-        - **PostRepositoryInterface:** Defines the contract for post-related operations.
-        - **PostRepository:** Implements the interface, encapsulating the data access logic.
-        - **Service Provider:** Binds the interface to the concrete implementation, enabling dependency injection. So Laravel knows which class (e.g.: PostRepository) to instantiate when a certain interface (e.g.: PostRepositoryInterface) is injected.
-        - **Controller & Models:** Uses the repository interface, adhering to the Dependency Inversion Principle.
+            **4. Using Repository Design Pattern:**
+            - Note: The **Repository Design Pattern** is used to abstract the data access layer of an application. It acts as a mediator between the domain and data mapping layers, such as a database or an API, providing a consistent and organized way to access, manipulate, and retrieve data. It abstracts the data access logic for the `Post` & `Category` entities in here. 
+            - **PostRepositoryInterface:** Defines the contract for post-related operations. This interface ensures that each repository has a single responsibility related to handling `Post` entities. It separates concerns by isolating the data access logic from other parts of the application.
+            - **PostRepository:** Implements the interface, encapsulating the data access logic. This class implements the `PostRepositoryInterface`, handling all CRUD operations related to the `Post` model. It ensures that each class or module has one, and only one, reason to change.
+            - **Service Provider:** Binds the interface to the concrete implementation, enabling dependency injection. So Laravel knows which class (e.g.: PostRepository) to instantiate when a certain interface (e.g.: PostRepositoryInterface) is injected.
+            - **Controller & Models:** Uses the repository interface, adhering to the Dependency Inversion Principle.
+            - **File changes:**
+                - `Post` Entity
+                    - Create the Interface `app/Contracts/PostRepositoryInterface.php`
+                    - Create the Repository Implementation `app/Repositories/PostRepository.php`
+                    - Changes to: `app\Providers\AppServiceProvider.php` >> `register()`
+                    - Changes to: `app\Models\Post.php` to use PostRepositoryInterface
+                    - Changes to: `app\Http\Controllers\Api\V2\PostController.php`
 
-        1. **Single Responsibility Principle (SRP) implementation:**
+        - **Open/Closed Principle (OCP) implementation:**
+            
+            **1. Using Repository Design Pattern:**
+            - **PostRepositoryInterface:** The `PostRepositoryInterface` allows the `PostRepository` class to be open for extension but closed for modification. If additional behavior is required, you can extend or implement the interface in a new class without altering the existing `PostRepository` code.
+            
+            **2. Using Traits:**
+            - **Trait (`Likeable`):** This encapsulates the `like()` and `dislike()` methods, providing a reusable way to extend functionality to any model that needs it.
+            Models (`Post` and `Comment`): By using the Likeable trait, both models gain the ability to be "liked" or "disliked" without modifying their core logic, thus adhering to the Open-Closed Principle.
+            - Create trait in `app\Traits\Likeable.php`. Traits are reusable code blocks in PHP that can be included in multiple classes without inheritance. They provide a way to share common functionality between classes without creating a complex class hierarchy and without using multiple inheritance which is not supported by PHP.
+            - Use the trait in `app\Models\Post.php` and `app\Models\Comment.php`
+            - Sample Usage - e.g: add this in a controller action to easily like or dislike posts and comments:
+            ```
+                $post = Post::find(1);
+                $post->like();
 
-            - **PostRepositoryInterface:** This interface ensures that each repository has a single responsibility related to handling `Post` entities. It separates concerns by isolating the data access logic from other parts of the application.
-            - **PostRepository:** This class implements the `PostRepositoryInterface`, handling all CRUD operations related to the `Post` model. It ensures that each class or module has one, and only one, reason to change.
+                $comment = Comment::find(1);
+                $comment->dislike();
+            ```
 
-        2. **Open/Closed Principle (OCP) implementation:**
 
-            The `PostRepositoryInterface` allows the `PostRepository` class to be open for extension but closed for modification. If additional behavior is required, you can extend or implement the interface in a new class without altering the existing `PostRepository` code.
-
-        3. **Liskov Substitution Principle (LSP) implementation:**
-
+        - **Liskov Substitution Principle (LSP) implementation:**
+        
+            **1. Using Repository Design Pattern:**
             By using the `PostRepositoryInterface` in the `PostController`, any implementation of this interface (like `PostRepository`) can be substituted without altering the functionality of the controller. This adheres to the LSP, ensuring that derived classes can replace base classes without affecting the application's correctness.
 
-        4. **Interface Segregation Principle (ISP) implementation:**
-
-            The `PostRepositoryInterface` is designed to be focused on specific methods related to the `Post` model. This ensures that classes implementing this interface are not forced to implement methods they don't use. Although the interface in this case is quite broad, it can still be considered under ISP as it is not forcing unnecessary methods on unrelated classes.
-
-        5. **Dependency Inversion Principle (DIP) implementation:**
-
-            The `PostController` depends on the `PostRepositoryInterface` rather than a concrete class. This follows the DIP by ensuring that high-level modules (controllers) do not depend on low-level modules (concrete repositories), but both depend on abstractions (interfaces).
-
-
-        - **File changes:**
-            - `Post` Entity
-                - Create the Interface `app/Contracts/PostRepositoryInterface.php`
-                - Create the Repository Implementation `app/Repositories/PostRepository.php`
-                - Changes to: `app\Providers\AppServiceProvider.php` >> `register()`
-                - Changes to: `app\Models\Post.php` to use PostRepositoryInterface
-                - Changes to: `app\Http\Controllers\Api\V2\PostController.php`
+            **2. Using an Abstract Class:**
+            Hypothetical usage: Author can click on two buttons in the React app UI and the buttons will send two Axios requests to below routes in `routes\api_v2.php:`
             
-            - `Category` Entity
-                - Create the Interface `app\Contracts\CategoryRepositoryInterface`
-                - Create the Repository Implementation `app/Repositories/CategoryRepository.php`
-                - Changes to: `app\Providers\AppServiceProvider.php` >> `register()`
-                - Changes to: `app\Models\Category.php` to use CategoryRepositoryInterface
-                - Changes to: `app\Http\Controllers\Api\V2\CategoryController.php`
+            ```
+            Route::post('/subscribe/mailchimp', [AuthorController::class, 'subscribeToMailList'])->defaults('emailProvider', new MailChimp);
+            ```
+            ```
+            Route::post('/subscribe/sendgrid', [AuthorController::class, 'subscribeToMailList'])->defaults('emailProvider', new SendGrid);
+            ```
+
+            - Abstract Class in `app/Services/EmailProviders/EmailProvider.php`
+            - Concrete subclasses for MailChimp and SendGrid in `app\Services\EmailProviders\MailChimp.php` & `app\Services\EmailProviders\SendGrid.php`
+            - Method to accept any EmailProvider type, allowing for either MailChimp or SendGrid (or any future providers) to be used interchangeably: `app\Http\Controllers\Api\V2\AuthorController.php` >> `subscribeToMailList()`
+            - Model: `app\Models\Author.php`
+				
+				
+        - **Interface Segregation Principle (ISP) implementation:**
+
+            By segregating the interfaces for Post(`app\Repositories\PostRepository.php`) and Category(`app\Repositories\CategoryRepository.php`), you ensure that each controller only relies on the methods it actually needs, adhering to the Interface Segregation Principle. This approach makes your code more modular, easier to test, and more maintainable.
+			Each of the interfaces is designed to be focused on specific methods related to the `Post`/`Category` model. This ensures that classes implementing this interface are not forced to implement methods they don't use. Although the interface in this case is quite broad, it can still be considered under ISP as it is not forcing unnecessary methods on unrelated classes.
+
+        - **Dependency Inversion Principle (DIP) implementation:**
+
+            The `PostController` depends on the `PostRepositoryInterface` rather than the concrete `PostRepository` class. This follows the DIP by ensuring that high-level modules (controllers e.g: `PostController`) do not depend on low-level modules (concrete repositories e.g: `PostRepository`), but both depend on abstractions (interfaces e.g: `PostRepositoryInterface`).
+
 
 
 ---
