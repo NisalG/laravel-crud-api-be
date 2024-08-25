@@ -8,19 +8,24 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Support\Facades\Storage;
 
-class SendDailyPostCountEmail extends Mailable
+class CategoryDeleteEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $emailData;
+    // public $attachments;
 
     /**
      * Create a new message instance.
      */
+    // public function __construct($emailData, $attachments)
     public function __construct($emailData)
     {
         $this->emailData = $emailData;
+        // $this->attachments = $attachments;
     }
 
     /**
@@ -29,7 +34,7 @@ class SendDailyPostCountEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Send Daily Post Count Email',
+            subject: 'Send Category Delete Email',
         );
     }
 
@@ -39,7 +44,7 @@ class SendDailyPostCountEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.sendDailyPostCountEmail',
+            view: 'emails.categoryDeleteEmail',
         );
     }
 
@@ -50,6 +55,13 @@ class SendDailyPostCountEmail extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        $attachments = [];
+
+        foreach ($this->attachments as $filePath) {
+            $attachments[] = Attachment::fromStorage($filePath);
+            // $attachments[] = Attachment::fromPath(Storage::path($filePath)); // using fromPath() instead of fromStorage()
+        }
+        
+        return $attachments;
     }
 }

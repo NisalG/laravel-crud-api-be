@@ -31,8 +31,9 @@ phases:
       # - php artisan migrate --force
       # printenv
       - php artisan migrate
-      - php artisan tenants:migrate
+      #- php artisan tenants:migrate # if a Tenancy package is used
       # - php artisan db:seed
+      # php artisan optimize # OR php artisan event:cache for Event Discovery in Production  
       - cd ..
   post_build:
     commands:

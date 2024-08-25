@@ -4,9 +4,9 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail; 
-use App\Mail\SendDailyPostCountEmail;
+use App\Mail\DailyPostCountEmail;
 
-class SendDailyPostCountEmailCommand extends Command
+class DailyPostCountEmailCommand extends Command
 {
     /**
      * The name and signature of the console command.
@@ -48,6 +48,6 @@ class SendDailyPostCountEmailCommand extends Command
         ];
 
         // Send email using Mail facade or any other email library
-        Mail::to($to)->send(new SendDailyPostCountEmail($emailData));
+        Mail::to($to)->send(new DailyPostCountEmail($emailData));
     }
 }

@@ -14,6 +14,7 @@ use App\Http\Resources\PostResource;
 use App\Jobs\SendPostUpdatedEmailJob;
 use App\Services\PostValidatorService;
 use App\Contracts\PostRepositoryInterface;
+use App\Events\PostCreated;
 
 class PostController extends Controller
 {
@@ -193,6 +194,10 @@ class PostController extends Controller
 
         try {
             $post = $this->postRepository->createPost($validator->validated());
+
+            // Dispatch event (similar to dispatching job in update())
+            PostCreated::dispatch($post);
+
             return response()->json(new PostResource($post), 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to create post', 'message' => $e->getMessage()], 500);

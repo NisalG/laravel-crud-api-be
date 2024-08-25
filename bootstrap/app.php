@@ -13,7 +13,7 @@ use App\Http\Middleware\RoleManagement;
 use App\Http\Middleware\LogUserActivity;
 use App\Http\Middleware\Localization;
 use App\Jobs\DeleteOldPostsJob;
-use App\Mail\SendDailyPostCountEmail;
+use App\Mail\DailyPostCountEmail;
 use Illuminate\Support\Facades\Mail;
 
 $app = Application::configure(basePath: dirname(__DIR__))
@@ -68,8 +68,8 @@ $app = Application::configure(basePath: dirname(__DIR__))
 
     // ->withSchedule(function (Schedule $schedule, $to, $emailData) {
     //     $schedule->call( function ($to, $emailData) {
-    //         // Mail::to($to)->send(new SendDailyPostCountEmail($emailData));
-    //         Mail::to($to)->send(new SendDailyPostCountEmail($emailData));
+    //         // Mail::to($to)->send(new DailyPostCountEmail($emailData));
+    //         Mail::to($to)->send(new DailyPostCountEmail($emailData));
     //     })->everyMinute();
     // })
 

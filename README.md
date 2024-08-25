@@ -674,13 +674,13 @@
         Use schedule:run Artisan command on AWS EC2 instance CRONTab (single entry is enough), AWS ElasticBeanstalk .ebextensions, Laravel Forge, etc.
 
     - Scheduling Artisan Commands:
-        - Create mailable: `php artisan make:mail SendDailyPostCountEmail`
-            - `app\Mail\SendDailyPostCountEmail.php` will be created
+        - Create mailable: `php artisan make:mail DailyPostCountEmail`
+            - `app\Mail\DailyPostCountEmail.php` will be created
         
-        - Create mail layout in: `resources\views\emails\sendDailyPostCountEmail.blade.php`
+        - Create mail layout in: `resources\views\emails\dailyPostCountEmail.blade.php`
 
-        - Create command: `php artisan make:command SendDailyPostCountEmailCommand`
-            - `app\Console\Commands\SendDailyPostCountEmailCommand.php` file will be created.
+        - Create command: `php artisan make:command DailyPostCountEmailCommand`
+            - `app\Console\Commands\DailyPostCountEmailCommand.php` file will be created.
                 - Set `$signature`, `$description`, `handle()`
 
         - Scheduling: `routes/console.php` >> 
@@ -796,16 +796,16 @@
         - `.env` > `MAIL_MAILER=log`
         - Stop and run: `php artisan serve`
         - `app\Http\Controllers\Api\V2\CategoryController.php` >> `destroy()` >> `Mail::to()`
-        - `php artisan make:mail SendCategoryDeleteEmail`
-        - Change `app\Mail\SendCategoryDeleteEmail.php` accordingly
+        - `php artisan make:mail CategoryDeleteEmail`
+        - Change `app\Mail\CategoryDeleteEmail.php` accordingly
         - Test mail locally by sending Postman request: [DELETE] `http://127.0.0.1:8000/api/v2/categories/2`:
             - The emails will be logged to your `storage/logs/laravel.log` file
     - Send emails with *Sendgrid* (with an attachment):
         - Install SendGrid: `composer require sendgrid/sendgrid`
         - Setup Mail Configuration in `.env` > Sendgrid
-        - Create Mail Class: `php artisan make:mail SendCategoryDeleteEmail`
-        - Update `app/Mail/SendCategoryDeleteEmail.php`
-        - Create a Blade template at `resources/views/emails/sendCategoryDeleteEmail.blade.php` and update `app/Mail/SendCategoryDeleteEmail.php` >> `content()` with its name `emails.sendCategoryDeleteEmail`
+        - Create Mail Class: `php artisan make:mail CategoryDeleteEmail`
+        - Update `app/Mail/CategoryDeleteEmail.php`
+        - Create a Blade template at `resources/views/emails/categoryDeleteEmail.blade.php` and update `app/Mail/CategoryDeleteEmail.php` >> `content()` with its name `emails.categoryDeleteEmail`
         - Add mailing to a controler action: `app\Http\Controllers\Api\V2\CategoryController.php` >> `destroy()`
         - Add attachments files:
             - Create an `attachments` folder inside `storage/app` and paste testing files in there
@@ -942,155 +942,292 @@
 
 - **Events vs Notifications:**
 	- In Laravel, Events and Notifications are both powerful tools, but they serve different purposes and are used in different contexts.
-	- Key Differences:
-		- Purpose:
+	- **Key Differences:**
+		- **Purpose:**
 			- Events: Used for handling actions that need to be processed in different parts of the system, often asynchronously.
 			- Notifications: Specifically designed for sending notifications to users across multiple channels.
 
-		- Flexibility:
+		- **Flexibility:**
 			- Events: More flexible in terms of usage, can be used for anything from logging to triggering complex workflows.
 			- Notifications: Tailored for user notifications with built-in support for different channels.
 
-		- Channels:
+		- **Channels:**
 			- Events: No built-in channels; you define how the event is handled.
 			- Notifications: Comes with built-in channels like mail, SMS, Slack, etc.
 
-		- Complexity:
+		- **Complexity:**
 			- Events: Requires setting up both events and listeners, which can be more complex.
 			- Notifications: Easier to implement for user notifications, with less boilerplate code.
-	- Summary
+	- **Summary:**
 		Use Events when you need to decouple parts of your application or when you need to handle actions across multiple areas of your system. Use Notifications when you need to inform users about specific events that concern them, leveraging Laravel's built-in channels for delivery.
 
 
 ---
 
 
-- **Events & Listeners: Event-Driven Architecture (EDA)**
+- **Event-Driven Architecture (EDA), Events & Listeners:**
+	
 
-Events in Laravel allow you to implement the `Observer Pattern`, where events are dispatched, and multiple listeners can respond to them, promoting loose coupling in your application. In other words, decouples components of an application by using events as a communication mechanism.
-
-- Benefits:
+- **EDA Benefits:**
 
 	- Improved scalability: Can handle high loads by distributing event processing.
     - Flexibility: Easily add or remove event listeners without affecting core logic.
     - Reusability: Event listeners can be reused in different contexts.
     - Asynchronous processing: Can offload time-consuming tasks to background jobs, improving performance.
-	
-- Generating Events & Listeners:
-    Use Artisan commands to create events and listeners:
-    - `php artisan make:event EventName`
-    - `php artisan make:listener ListenerName --event=EventName`
+	- Events and listners are not only to send emails etc. but also for updating DBs, running other processes etc.
 
-- Registering Events & Listeners:
-    - Automatic Registration:
+- **Laravel Events:** 
+	- Events in Laravel allow you to implement the `Observer Pattern`, where events are dispatched, and multiple listeners can respond to them, promoting loose coupling in your application. In other words, decouples components of an application by using events as a communication mechanism.
+	- Use `php artisan event:list` to list registered listeners.
+	- Consider using event sourcing for storing a complete history of events, enabling easier auditing and replay. Use `Spatie Laravel Event Sourcing` packag: https://spatie.be/index.php/docs/laravel-event-sourcing/v7/introduction
+
+- **Generating Events & Listeners:**
+    Use Artisan commands to create events and listeners:
+    - `php artisan make:event PostCreated`
+    - `php artisan make:listener SendPostCreatedEmail --event=PostCreated`
+
+- **Registering Events & Listeners:**
+    - **Automatic Registration:**
             Laravel automatically registers listeners by scanning the `app/Listeners` directory. Methods named `handle` or` __invoke` will be registered.
-    - Manual Registration:
+			Events are discovered/registered by Laravel from the event that is type-hinted in the listners' `handle()` method's signature.
+			Event Discovery in Production: Add `buildspec.yml` >> `php artisan event:cache` OR `php artisan optimize`
+    - **Manual Registration:**
             Use the `Event` facade in `AppServiceProvider` >> `boot()` method. Event listeners can be registered globally or within specific routes or controllers.
         ```
         Event::listen(
-            EventName::class,
-            ListenerName::class,
+            PostCreated::class,
+            SendPostCreatedEmail::class,
         );
         ```
-- Closure & Queueable Listeners:
+- **Other Event and Listner types**		
+	- **Closure & Queueable Listeners:**
 
-    - Closure Listeners:
-        Can be defined/register directly in the `AppServiceProvider` >> `boot()` method using the `Event::listen()` method.
-    
-    - Queueable Listeners:
-        Wrap closures with `queueable` for executing via queue.
-        ```
-        Event::listen(queueable(function (EventName $event) {
-            // Logic here...
-        })->onConnection('redis')->onQueue('queue_name'));
-        ```
+		- **Closure Listeners:**
+			Can be defined/register directly in the `AppServiceProvider` >> `boot()` method using the `Event::listen()` method.
+		
+		- **Queueable Listeners:**
+			Wrap closures with `queueable` for executing via queue.
+			```
+			Event::listen(queueable(function (PostCreated $event) {
+				// Logic here...
+			})->onConnection('redis')->onQueue('queue_name'));
+			```
 
-- Wildcard Event Listeners:
+	- **Wildcard Event Listeners:**
 
-    Allows catching multiple events with a single listener using `*` as a wildcard.
+		Allows catching multiple events with a single listener using `*` as a wildcard.
 
-    ```
-    Event::listen('event.*', function (string $eventName, array $data) {
-        // Handle wildcard event...
-    });
-    ```
+		```
+		Event::listen('event.*', function (string $eventName, array $data) {
+			// Handle wildcard event...
+		});
+		```
 
-- Defining Events & Listeners:
+- **Defining Events & Listeners:**
 
-    - Event Class:
-        A simple data container that holds event-related information. For example, an `OrderCreated` event might contain an `Order` instance.
-        `App\Events\OrderCreated.php`:
+    - **Event Class:**
+        A simple data container that holds event-related information. For example, an `PostCreated` event might contain an `Post` instance.
+        `App\Events\PostCreated.php`:
         ```
 		namespace App\Events;
-		   
-        class OrderCreated extends Event
+		
+		use App\Models\Post;
+		
+        class PostCreated extends Event
         {
 			use Dispatchable, InteractsWithSockets, SerializesModels;
-			
-			public $order;
 			   
-            public function __construct(public Order $order) 
+            public function __construct(public Post $post) 
 			{
-				$this->order = $order;
+			    info("PostCreated event's >> __construct() method called");
+				info("PostCreated event's >> post: " . json_encode($post));
+				$this->post = $post;
 			}
         }
         ```
 
-    - Listener Class:
+    - **Listener Class:**
 
-        Listeners handle events. They receive event instances in their `handle` method. You can perform actions based on the event data.
-		`App\Listeners\SendOrderConfirmationEmail.php`:
+        - Listeners handle events. They receive event instances in their `handle` method. You can perform actions based on the event data.
+			- **Queued Event Listeners:**
+				- Events can be queued for asynchronous processing using `ShouldQueue` interface. Implement ShouldQueue interface to queue listeners for slow tasks like sending emails, calling third party APIs etc. 
+				- Before using queued listeners, make sure to configure your queue and start a queue worker on your server or local development environment.
+				- Customize queue behavior using `$connection`, `$queue`, and `$delay` properties or methods like `viaConnection` and `viaQueue`.
+				- Handling Failed Jobs: Use the `failed` method to handle listener failures. Define `$tries` or `retryUntil` to limit retries.
+	
+		`App\Listeners\SendPostCreatedEmail.php`:
         ```
 		namespace App\Listeners;
-		use App\Events\OrderCreated;
+		use App\Events\PostCreated;
 		use Illuminate\Contracts\Queue\ShouldQueue;
 		
-        class SendOrderConfirmationEmail implements ShouldQueue
+        class SendPostCreatedEmail implements ShouldQueue
         {
-            public function handle(OrderCreated $event): void
+		    /**
+			 * The name of the connection the job should be sent to.
+			 *
+			 * @var string|null
+			 */
+			public $connection = 'sqs';
+		 
+			/**
+			 * The name of the queue the job should be sent to.
+			 *
+			 * @var string|null
+			 */
+			public $queue = 'listeners';
+		 
+			/**
+			 * The time (seconds) before the job should be processed.
+			 *
+			 * @var int
+			 */
+			public $delay = 60;
+	
+            public function handle(PostCreated $event): void
             {
-                // Send confirmation email to the customer
-				Mail::to($event->order->customer->email)->send(new OrderConfirmationEmail($event->order));
+				info("PostCreated event's SendPostCreatedEmail listner's >> handle() method triggered");
+                // Send Post Created email to the user - see "Create PostCreatedEmail Mailable" section below
+				// Mail::to($event->post->user->email)->send(new PostCreatedEmail($event->post));
             }
         }
+		
+		/**
+		* Handle a job failure.
+		*/
+		public function failed(PostCreated $event, Throwable $exception): void
+		{
+			// Handle the failure (e.g., log the error, notify admin, etc.)
+			info('Failed to send post created email', [
+				'post_id' => $event->post->id,
+				'exception' => $exception->getMessage(),
+			]);
+		}
         ```
-
-- Queued Event Listeners:
-
-    - Events can be queued for asynchronous processing using `ShouldQueue` interface. Implement ShouldQueue interface to queue listeners for slow tasks. 
-    - Customize queue behavior using `$connection`, `$queue`, and `$delay` properties or methods like `viaConnection` and `viaQueue`.
-	- Handling Failed Jobs: Use the `failed` method to handle listener failures. Define `$tries` or `retryUntil` to limit retries.
+		
+		- Create PostCreatedEmail Mailable for above listener: `php artisan make:mail PostCreatedEmail --markdown=emails.posts.created`
+			- `App\Mail\PostCreatedEmail.php` and `resources/views/emails/posts/created.blade.php` will be created 
 	
-	
-- Dispatching Events
+- **Dispatching Events:**
 
-	Use `Event::dispatch()` to dispatch/trigger an event. You can conditionally dispatch using `dispatchIf` or `dispatchUnless`.
-	In your controller action etc.:
-	```
-	// When an order is created
-	Event::dispatch(new OrderCreated($order));
-	```
-	
-- Event Subscribers:
-
-    Subscribers can listen to multiple events within a single class by defining event-handler methods. Define a subscribe method to register listeners.
-    ```
-    class UserEventSubscriber
-    {
-        public function subscribe(Dispatcher $events): void
-        {
-            $events->listen(Login::class, [UserEventSubscriber::class, 'handleUserLogin']);
-        }
-    }
-    ```
-
-    - Register in AppServiceProvider using `Event::subscribe()`.
-	
-- Notes:
-	- Use `php artisan event:list` to list registered listeners.
-	- Cache event listeners for performance using `optimize` or `event:cache`.
+	- Use `Event::dispatch()` to dispatch/trigger an event. 
+		- In your controller action etc.:
+		```
+		// When an Post is created - app\Http\Controllers\Api\V2\PostController.php >> store()
+		PostCreated::dispatch($post);
+		```
+	- You can conditionally dispatch using `dispatchIf` or `dispatchUnless`.
 	- Dispatch events after database transactions using `ShouldDispatchAfterCommit`.
-	- Consider using event sourcing for storing a complete history of events, enabling easier auditing and replay. Use `Spatie Laravel Event Sourcing` packag: https://spatie.be/index.php/docs/laravel-event-sourcing/v7/introduction
+
+- **Testing/Running Events & Listeners:**
+	- Run/test Locally: 
+		- .env update:
+			- `.env` >> `QUEUE_CONNECTION=database`
+			- `.env` > `MAIL_MAILER=log`
+			- Stop and run: `php artisan serve`
+		- Send a request to `PostController` >> `store()`
+			- Event info in `PostCreated` >> `__construct()` will be logged
+			- Job will be added to `jobs` table
+		- `php artisan queue:work` - this will execute the jobs and:
+			- if succeed,
+				- Listener info in `SendPostCreatedEmail` >> `handle()` will be logged
+				- Data will be removed from `jobs` table
+			- if faild, will add to `failed_jobs` table with the error
+			
+	- Run on STG/PRD:
+		- Event Discovery in Production & Cache event listeners for performance: Add `buildspec.yml` >> `php artisan event:cache` OR `php artisan optimize`
+		- Cron Job Setup on Linux Server using CRON tab
+			- `crontab -e`
+		- Cron Job Setup on Linux Server using AWS Elastic Beanstalk extensions: `.ebextensions\laravel-queue-worker.config`
+			- `leader_only`: true ensures that the command is only run on the leader instance in an autoscaling group.
+			- The `--daemon` flag makes the worker run continuously, processing jobs as they come in.
+			
+	
+- **Event Subscribers:**
+
+    - Subscribers can listen to multiple events within a single class by defining event-handler methods. 
+	- Define a `app\Listeners\UserEventSubscriber` >> `subscribe()` method to register listeners.
+    ```
+	<?php
+	 
+	namespace App\Listeners;
+	 
+	use Illuminate\Auth\Events\Login;
+	use Illuminate\Auth\Events\Logout;
+	use Illuminate\Events\Dispatcher;
+	 
+	class UserEventSubscriber
+	{
+		/**
+		 * Handle user login events.
+		 */
+		public function handleUserLogin(Login $event): void {}
+	 
+		/**
+		 * Handle user logout events.
+		 */
+		public function handleUserLogout(Logout $event): void {}
+	 
+		/**
+		 * Method 1 - Register the listeners for the subscriber:
+		 * 
+		 */
+		public function subscribe(Dispatcher $events): void
+		{
+			
+			$events->listen(
+				Login::class,
+				[UserEventSubscriber::class, 'handleUserLogin']
+			);
+	 
+			$events->listen(
+				Logout::class,
+				[UserEventSubscriber::class, 'handleUserLogout']
+			);
+		}
+		
+		/**
+		 * Method 2 - Register the listeners for the subscriber: If your event listener methods are within the subscriber itself, you can return an array of events and corresponding method names from the subscriber's subscribe method.
+		 * Laravel will then automatically determine the subscriber's class name when registering the event listeners.
+		 * 
+		 * @return array<string, string>
+		 */
+		public function subscribe(Dispatcher $events): array
+		{
+			return [
+				Login::class => 'handleUserLogin',
+				Logout::class => 'handleUserLogout',
+			];
+		}
+	}
+    ```
+
+    - Register the `UserEventSubscriber` in `AppServiceProvider` >> `boot()` using `Event::subscribe()`:
+	```
+	namespace App\Providers;
+ 
+	use App\Listeners\UserEventSubscriber;
+
+	class AppServiceProvider extends ServiceProvider
+	{
+		/**
+		 * Bootstrap any application services.
+		 */
+		public function boot(): void
+		{
+			Event::subscribe(UserEventSubscriber::class);
+		}
+	}
+	```
+	- **Testing/Running Events Subscribers:**
+		- Run/test Locally: 
+			- Send requests to `/login` & `/logout` routes
+				- Event info will be logged			
+		- Run on STG/PRD:
+			- Same as local testing
+			- Clear and Cache Configuration (Optional but Recommended):
+				- `php artisan config:cache`
+				- `php artisan event:cache`
 
 
 ---

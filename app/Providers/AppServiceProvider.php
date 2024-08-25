@@ -11,6 +11,9 @@ use App\Repositories\PostRepository;
 use App\Contracts\CategoryRepositoryInterface;
 use App\Repositories\CategoryRepository;
 
+use Illuminate\Support\Facades\Event;
+use App\Listeners\UserEventSubscriber;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -33,5 +36,8 @@ class AppServiceProvider extends ServiceProvider
         // if (env('APP_ENV') !== 'local') {
         //     URL::forceScheme('https');
         // }
+
+        Event::subscribe(UserEventSubscriber::class); // Register the Subscriber
+
     }
 }

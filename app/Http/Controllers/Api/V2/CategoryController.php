@@ -13,7 +13,7 @@ use App\Exceptions\AuthorizationException;
 use App\Exceptions\DatabaseException;
 use App\Exceptions\EntityNotFoundException;
 use App\Exceptions\ValidationException;
-use App\Mail\SendCategoryDeleteEmail;
+use App\Mail\CategoryDeleteEmail;
 use Illuminate\Support\Facades\Mail;
 use App\Services\CategoryValidatorService;
 use App\Contracts\CategoryRepositoryInterface;
@@ -177,7 +177,7 @@ class CategoryController extends Controller
 
             // Do not send attachments with $attachments and assign to a $attachments variable to the below class and they will be read automtically by Laravel
             // If you want to send attachments from here, add them to the $emailData variable
-            Mail::to('tempmail@gmail.com')->send(new SendCategoryDeleteEmail($emailData));
+            Mail::to('tempmail@gmail.com')->send(new CategoryDeleteEmail($emailData));
                 
             // return response()->json(['message' => 'Category deleted successfully'], 200);
             // OR
