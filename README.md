@@ -126,7 +126,12 @@
 
 - **SOLID Principles**
 
+
+- **Design Patterns**
+
+
 ---
+
 
 # Advance Features Explained: Guides, Steps, Artisan Commands and Source Files for above Advance Features
 - **Swagger**
@@ -272,6 +277,7 @@
             - Benefits of Using Observers: Separation of concerns, reusability, organization, improved code readability, maintainability, centralized event handling logic
             - Create an Observer: `php artisan make:observer PostObserver --model=Post`
             - Created file: `App\Observers\PostObserver.php`
+				- Add code for model event functions `creating()`, `updating()` etc.
             - Register the Observer: `App\Providers\AppServiceProvider.php`
 - **API**
     - Authentication with Sanctum
@@ -1522,6 +1528,151 @@
 ---
 
 
+- **Design Patterns**
+	- **Types of Design Patterns**
+
+		Design patterns can be categorized into three main types based on their purpose:
+		
+		**1. Creational Patterns:** These patterns deal with object creation mechanisms. They help in creating objects in a flexible and controlled way.		
+			
+		- **Factory Pattern:** Creates objects without specifying their exact class.
+		- **Abstract Factory Pattern:** Creates families of related objects without specifying their concrete classes.
+		- **Singleton Pattern:** Ensures that a class has only one instance and provides a global point of access to it.   
+
+		**2. Structural Patterns:** These patterns deal with how classes and objects are composed to form larger structures. They focus on relationships between objects.
+
+		- **Adapter Pattern:** Converts the interface of a class into another interface that clients expect.
+		- **Decorator Pattern:** Adds additional responsibilities to objects dynamically.
+		- **Facade Pattern:** Provides a unified interface to a set of interfaces in a subsystem.
+
+		**3. Behavioral Patterns:**	These patterns deal with how objects interact and communicate with each other. They focus on the algorithms and responsibilities of objects.
+
+		- **Strategy Pattern:** Defines a family of algorithms, encapsulates each one, and makes them interchangeable.
+		- **Observer Pattern:** Defines a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically.   
+
+	- **1. Singleton Pattern**
+
+		**Usage in Laravel:** Ensures a class has only one instance and provides global access. Facades in Laravel use this pattern as proxies to service container bindings.
+		
+		**Example:** `Cache::get('key')` uses a single instance of the cache manager.
+
+		- **Singleton Pattern with Service Container**
+
+			**Usage in Laravel:** The service container manages dependencies and uses the Singleton pattern to create and use only one instance of a service across the application.
+		
+			**Example:**
+
+			```
+
+			public function register()
+			{
+				$this->app->singleton('MyService', function ($app) {
+					return new MyService();
+				});
+			}
+			```
+			
+			`app('MyService')` always returns the same instance.
+
+	- **2. Facade Pattern**
+
+		**Usage in Laravel:** Provides a "static" interface to classes in the service container, simplifying dependency injection.
+		
+		**Example:**
+
+		```
+
+		'aliases' => [
+			'Cache' => Illuminate\Support\Facades\Cache::class,
+		]
+		```
+		
+		`Cache::get('key')` is a facade accessing the cache service.
+		
+	- **Combining Singleton and Facade Patterns**
+
+		Facades often resolve singletons from the service container, allowing concise, expressive code while maintaining dependency injection benefits.
+
+	- **3. Factory Pattern**
+
+		**Usage in Laravel:** The Factory pattern is used to create objects without specifying the exact class of object that will be created. Laravel uses this pattern in model factories for generating fake data during testing.
+		
+		**Example:** You can create a new instance of a model using a factory like this:
+
+		```
+		$user = User::factory()->create();
+		```
+
+	- **4. Repository Pattern**
+
+		**Usage in Laravel:** This pattern is not built into Laravel but is commonly implemented by developers to separate business logic from data access. The Repository pattern abstracts the data layer, providing a way to access data in the application from multiple sources (like databases, APIs, etc.).
+		
+		**Example:** You can create a PostRepository to handle all database interactions related to the Post model, allowing the PostController to focus on business logic.
+
+		```
+		class PostRepository {
+			public function getAllPosts() {
+				return Post::all();
+			}
+		}
+		```
+		
+	- **5. Strategy Pattern**
+
+		**Usage in Laravel:** The Strategy pattern allows you to define a family of algorithms, encapsulate each one, and make them interchangeable. In Laravel, you can use this pattern to swap out different implementations of a task, such as sending notifications via different channels (email, SMS, etc.).
+		
+		**Example:** Laravel’s notification system allows you to send notifications via multiple channels:
+
+		```
+		Notification::send($users, new InvoicePaid($invoice));
+		```
+		
+	- **6. Observer Pattern**
+
+		**Usage in Laravel:** The Observer pattern is used to notify multiple objects about any changes to the state of another object.
+		
+		**Example 1:** Laravel’s Eloquent ORM implements this pattern with model observers, allowing you to listen to various changes in the model in events like creating, updating, deleting, etc.
+		
+		- Benefits of Using Observers: Separation of concerns, reusability, organization, improved code readability, maintainability, centralized event handling logic
+		- Create an Observer: `php artisan make:observer PostObserver --model=Post`
+		- Created file: `App\Observers\PostObserver.php`
+			- Add code for model event functions `creating()`, `updating()` etc.
+		- Register the Observer: `App\Providers\AppServiceProvider.php`
+		- See "Advance Eloquent Techniques" >> "Events and Observers" for more info
+			
+		**Example 2:** Events in Laravel allow you to implement the `Observer Pattern`, where events are dispatched, and multiple listeners can respond to them, promoting loose coupling in your application.
+		- See "Events and listners" for more info
+		
+		
+	- **7. Decorator Pattern**
+
+		**Usage in Laravel:** The Decorator pattern allows you to dynamically add behavior to an object. Laravel uses this pattern in its middleware system, where each middleware adds some behavior to the request before passing it to the next middleware or to the final application logic.
+		
+		**Example:** Middleware like auth can be used to check if a user is authenticated before allowing them to access certain routes:
+
+		```
+		Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('auth');
+		```
+
+	- **8. Adapter Pattern**
+
+		**Usage in Laravel:** The Adapter pattern allows an interface to be used as another interface. In Laravel, this is often seen in the implementation of service providers, where different services are adapted to work with Laravel's service container.
+		
+		**Example:** An adapter can be used to integrate a third-party payment service into your Laravel application, making it compatible with your existing code.
+
+
+
+	- **9. Chain of Responsibility Pattern**
+
+		**Usage in Laravel:** The Chain of Responsibility pattern passes a request along a chain of handlers, where each handler decides either to process the request or pass it on. Laravel’s pipeline and middleware systems are examples of this pattern.
+		
+		**Example:** You can create a pipeline to process a job through a series of tasks:
+
+		```
+		Pipeline::send($job)
+			->through([Task1::class, Task2::class])
+			->thenReturn();	
+		```
 
 
 # How to run the application 
