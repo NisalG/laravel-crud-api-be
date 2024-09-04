@@ -10,6 +10,7 @@
         "darkaonline/l5-swagger": "^8.6",
         "laravel/framework": "^11.9",
         "laravel/sanctum": "^4.0",
+        "laravel/slack-notification-channel": "^3.3",
         "laravel/tinker": "^2.9",
         "predis/predis": "^2.2",
         "pusher/pusher-php-server": "^7.2",

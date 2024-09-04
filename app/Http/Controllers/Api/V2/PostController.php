@@ -15,6 +15,9 @@ use App\Jobs\SendPostUpdatedEmailJob;
 use App\Services\PostValidatorService;
 use App\Contracts\PostRepositoryInterface;
 use App\Events\PostCreated;
+use Illuminate\Support\Facades\Auth;
+use App\Notifications\PostViewed;
+use Illuminate\Support\Facades\Notification;
 
 class PostController extends Controller
 {
@@ -142,6 +145,11 @@ class PostController extends Controller
         // With using API resource
         try {
             $post = $this->postRepository->getPostById($id);
+
+            $user = Auth::user();
+            // $user->notify(new PostViewed($post));
+            Notification::send($user, new PostViewed($post));
+
             return new PostResource($post);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['error' => 'Post not found'], 404);
@@ -485,7 +493,7 @@ class PostController extends Controller
 
     // Polymorphic Relationship usage sample - Adding a comment to a post.
     // Also see CategoryController >> addCategoryComment - Adding a comment to a category.
-    public function addCategoryComment(Request $request)
+    public function addPostComment(Request $request)
     {
         $post = Post::find($request->post_id);
         $post->comments()->create([
