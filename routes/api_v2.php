@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V2\AWSController;
 use App\Http\Controllers\Api\V2\CoinGeckoController;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Broadcast;
 
 // Middlewares
 use App\Http\Middleware\RoleManagement;
@@ -91,3 +92,9 @@ Route::get('/test-redis', function () {
 
 Route::post('/subscribe/mailchimp', [AuthorController::class, 'subscribeToMailList'])->defaults('emailProvider', new MailChimp);
 Route::post('/subscribe/sendgrid', [AuthorController::class, 'subscribeToMailList'])->defaults('emailProvider', new SendGrid);
+
+// Route::middleware('auth:sanctum')->post('/broadcasting/auth', [BroadcastController::class, 'auth']);
+
+// Route::group(['middleware' => 'auth:sanctum'], function () {
+    Broadcast::routes(); 
+// });

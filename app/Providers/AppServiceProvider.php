@@ -14,6 +14,8 @@ use App\Repositories\CategoryRepository;
 use Illuminate\Support\Facades\Event;
 use App\Listeners\UserEventSubscriber;
 
+use Illuminate\Support\Facades\Broadcast;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -39,5 +41,8 @@ class AppServiceProvider extends ServiceProvider
 
         Event::subscribe(UserEventSubscriber::class); // Register the Subscriber
 
+        // Broadcast::routes();
+
+        // require base_path('routes/channels.php');
     }
 }

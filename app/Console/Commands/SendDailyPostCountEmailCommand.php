@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail; 
 use App\Mail\DailyPostCountEmail;
 
-class DailyPostCountEmailCommand extends Command
+class SendDailyPostCountEmailCommand extends Command
 {
     /**
      * The name and signature of the console command.

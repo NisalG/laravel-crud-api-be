@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
+// use Illuminate\Broadcasting\BroadcastServiceProvider;
 
 return [
 
@@ -138,6 +139,7 @@ return [
         // App\Providers\AuthServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\AWSServiceProvider::class,
+        // Illuminate\Broadcasting\BroadcastServiceProvider::class,
     ])->toArray(),
 
 ];

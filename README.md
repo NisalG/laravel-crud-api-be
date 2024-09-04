@@ -1311,7 +1311,263 @@ These does not populate `jobs` table: Scheduled tasks (unless they dispatch jobs
 
 <h2 id="webSockets">Event Broadcasting (WebSockets) - ToDo</h2>
 
+**Note:** I use Pusher over Reverb since I have previous experince in Pusher with Node.js(Nest.js) + React.js using websockets for sending notifications. Reverb is the priority of Laravel 11.
 
+**What is the real-time application?**
+	- Traditional web applications/ rest APIs as requests and responses. Client send a request and server send back a response.
+	- Information must be streamed between the client and the server continuously in real-time applications use cases like online multiplayer games, chat apps. This is done using websockets.
+	
+**WebSockets:** A communication protocol enabling full-duplex (both/double side) communication channels over a single TCP connection, ideal for real-time updates.
+
+**Broadcasting in Laravel:** The process of transmitting server-side events to client-side applications in real-time, often using WebSocket connections. Useful for live notifications, real-time updates, chat applications, etc.
+
+**Laravel Echo:** A JavaScript library providing an easy-to-use API for subscribing to channels and listening to events broadcasted by Laravel via WebSockets. Uses Pusher as `broadcaster` with other Pusher configurations taken from `.env`.
+
+**Pusher:** A hosted service that simplifies the integration of real-time data and functionality into web and mobile applications through WebSocket APIs.
+
+**Create Account in Pusher:**
+	- pusher.com >> SignUp for free
+	- Channels >> Create a new app 
+		- Name your app: laravel-advance-crud-777
+		- Select a cluster: ap2 (since Asia Pacific)
+		- Choose your tech stack (optional)
+			- Front end: React
+			- Back end: Laravel
+			- a FE and BE samples and steps will be given.
+		- App keys tab: Add these in FE, BE .env files
+			app_id = "xxxxxx"
+			key = "xxxxxxxxxxx"
+			secret = "xxxxxxxxxxxxxxxxxx"
+			cluster = "ap2"
+
+**Server Side:**
+	- By default, broadcasting is not enabled in new Laravel applications. Enable broadcasting: `php artisan install:broadcasting`
+		- `Would you like to install Laravel Reverb? (yes/no)` - n
+		- `Would you like to install and build the Node dependencies required for broadcasting? (yes/no)` - y
+		- These files will create:
+			- config/broadcasting.php configuration file
+			- routes/channels.php file to register application's broadcast authorization routes and callbacks
+
+	- Install the Pusher PHP SDK: composer require pusher/pusher-php-server
+		
+	- Laravel app .env:
+		```
+		#BROADCAST_CONNECTION=log #--- use for local testing
+		BROADCAST_CONNECTION=pusher
+		PUSHER_APP_ID="your-pusher-app-id"
+		PUSHER_APP_KEY="your-pusher-key"
+		PUSHER_APP_SECRET="your-pusher-secret"
+		PUSHER_HOST=
+		#PUSHER_PORT=443
+		#PUSHER_SCHEME="https"
+		PUSHER_APP_CLUSTER="ap2"
+		```
+		
+	- (We already have PostCreated in our project) Create an event that you want to broadcast: php artisan make:event PostCreated 
+		- app/Events/PostCreated.php should implement ShouldBroadcast
+		- Setting data/payload to transmit:
+			- All of events public properties are automatically serialized and broadcast as the event's payload.
+			- To customize use broadcastWith():
+				```
+				public function broadcastWith(): array
+				{
+					return ['id' => $this->user->id];
+				}
+				```
+		- Setting channel:
+			- Public channels:
+				- Channel name in broadcastOn(): `new Channel('PostCreated.PublicChannel'),
+			- Private channels:
+				- Channel name in broadcastOn(): `new PrivateChannel('PostCreated.PrivateChannel.'.$this->post->id),`
+		
+	- Broadcast the Event: app\Http\Controllers\Api\V2\PostController.php  >> store() >> PostCreated::dispatch($post);
+	- Public Channels:
+		- No changes need to be added to `routes\channels.php`
+	- Private Channels - Authorization:
+		- Here's already an example channel defined for us by default in `routes\channels.php`:
+		```
+		Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
+			return (int) $user->id === (int) $id;
+		});
+		```
+		
+		- Users must be authorized to listen on private channels. Define channel authorization rules in `routes/channels.php`. Below is to verify that any user attempting to listen on the private PostCreated.PrivateChannel.1 channel is actually the creator of the Post.
+		```
+		Broadcast::channel('PostCreated.PrivateChannel.{postId}', function (User $user, int $postId) {
+			return $user->id === Post::findOrNew($postId)->user_id;
+		});
+		```
+		- Add to FE: `echo.js`:
+			```
+			authEndpoint: import.meta.env.VITE_PUSHER_BE_AUTH_ENDPOINT,
+			auth: {
+				headers: {
+					Authorization: `Bearer ${localStorage.getItem('authToken')}` // or however you manage tokens
+				}
+			}
+			```
+		- Laravel echo send Auth request to Laravel app's `/broadcasting/auth route`.
+			- Run `php artisan route:list` to check if it's available and if not add it to `routes\api_v2.php`:
+				```
+				use Illuminate\Support\Facades\Broadcast;
+				
+				Route::group(['middleware' => 'auth:sanctum'], function () {
+					Broadcast::routes(); 
+				});
+				```
+			If you run `php artisan route:list` again, you will see `api/v2/broadcasting/auth`
+		- Errors with private channels:
+			- Use Postman request for testing: http://127.0.0.1:8000/api/v2/broadcasting/auth
+			- Some resources advise to add BroadcastServiceProvider to `config\app.php`. But it's not required since BroadcastServiceProvider is added by default in `vendor\laravel\framework\src\Illuminate\Support\DefaultProviders.php`
+			- php artisan channel:list
+				- ERROR: Your application doesn't have any private broadcasting channels.
+					- Try:
+					php artisan config:clear
+					php artisan route:clear
+					php artisan cache:clear
+					php artisan config:cache
+					- Seems a known issue: https://laracasts.com/discuss/channels/reverb/artisan-channellist-return-doesnt-have-any-private-broadcasting-channels
+			- Same empty private channels issue in `vendor\laravel\framework\src\Illuminate\Broadcasting\Broadcasters\Broadcaster.php` >> `verifyUserCanAccessChannel()` >> `$this->channels`
+			- Get 403 for http://127.0.0.1:8000/api/v2/broadcasting/auth in React App
+				- ToDo
+		
+
+**Client Side:**
+	- FE in: https://github.com/NisalG/laravel-crud-api-fe
+	- Laravel Echo and the Pusher JS library are necessary for client-side real-time updates: npm install --save-dev laravel-echo pusher-js
+	- Client(React.js) `.env`:
+		```
+		VITE_PUSHER_APP_KEY="7bb8395a4f6ec286cf65"
+		VITE_PUSHER_APP_CLUSTER="ap2"
+
+		# Enable pusher logging - disable this in production
+		VITE_PUSHER_LOG_TO_CONSOLE=true
+
+		VITE_PUSHER_BE_AUTH_ENDPOINT="http://127.0.0.1:8000/api/v2/broadcasting/auth"
+		```
+		
+	- Configure Laravel Echo - create a new JavaScript file `echo.js`
+		```
+		import Echo from 'laravel-echo';
+		import Pusher from 'pusher-js';
+
+		window.Pusher = Pusher;
+
+		// Enable pusher logging - disable this in production
+		Pusher.logToConsole = import.meta.env.VITE_PUSHER_LOG_TO_CONSOLE;
+
+		const echo = new Echo({
+			broadcaster: 'pusher',
+			key: import.meta.env.VITE_PUSHER_APP_KEY,
+			cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+			// key: process.env.MIX_PUSHER_APP_KEY,
+			// cluster: process.env.MIX_PUSHER_APP_CLUSTER,
+			forceTLS: true,
+			authEndpoint: import.meta.env.VITE_PUSHER_BE_AUTH_ENDPOINT,
+			auth: {
+				headers: {
+					Authorization: `Bearer ${localStorage.getItem('authToken')}`, // or however you manage tokens
+					Accept: 'application/json',
+					// 'Content-Type': 'application/json',
+				}
+			}
+		});
+
+		window.Echo = echo;
+
+		export default echo;
+		```
+
+	- Listening for Event Broadcasts- `src\components\PusherNotifications\PusherNotifications.tsx`
+		```
+		import React, { useState, useEffect } from "react";
+		import echo from "../../../echo";
+
+		interface Message {
+		  id: number;
+		  title: string;
+		}
+
+		const PusherNotifications: React.FC = () => {
+		  const [posts, setPosts] = useState<Message[]>([]);
+
+		  useEffect(() => {
+
+			// listen for events on a public channel
+			echo.channel("PostCreated.PublicChannel").listen("PostCreated", (event: any) => {
+			  console.log("Public event data: ", event);
+			  console.log("Public event data JSON.stringify: ", JSON.stringify(event));
+			  setPosts((prevPosts) => [...prevPosts, event.post]);
+			});
+			
+			// listen for events on a private channel
+			// echo
+			//   .private(`PostCreatedPrivateChannel.${postId}`)
+			//   .listen("PostCreated", (event: any) => {
+			//     console.log("Private event data: ", event);
+			//     console.log("Private event data JSON.stringify: ", JSON.stringify(event));
+			//   });
+
+			echo
+			.private(`PostCreatedPrivateChannel`)
+			.listen("PostCreated", (event: any) => {
+			  console.log("Private event data: ", event);
+			  console.log("Private event data JSON.stringify: ", JSON.stringify(event));
+			});
+
+
+			// Cleanup on component unmount
+			return () => {
+			  echo.leaveChannel("PostCreated.PublicChannel");
+			  echo.leaveChannel("PostCreatedPrivateChannel");
+			};
+		  }, []);
+		```
+
+**Testing:** 
+	- BE: 
+		- php artisan serve
+		- php artisan queue:work
+			- Event PostCreated get added to the `jobs` table
+	- FE:
+		- echo.js > 
+			- Enable pusher logging - don't include this in production: Pusher.logToConsole = true;
+		- npm run dev | npm run build
+	- Postman: Send POST request to Post > Create
+	- Check Chrome > Dev tools:
+		- Network Tab > WS(Websockets) tab
+		- Console tab
+	- Public Channels You will get the: 
+		- Notification on Chrome Dev Console 
+		- Post Title on React FE UI
+	- Pusher Admin Panel:
+		- Login to https://dashboard.pusher.com/channels to view info about channels, connections, messages etc.
+	- Private Channels:
+		- React app authenticated user (user_id of the localStorage's authToken) and Create Post's Postman POST request's user (user_id) and Auth tokan should be same.
+		- Get 403 for http://127.0.0.1:8000/api/v2/broadcasting/auth in React App - when dig into Laravel library the root cause is empty channels
+			- ToDo
+			- Resources:
+				- https://www.interviewsolutionshub.com/blog/realtime-notification-with-laravel-and-reactjs#google_vignette
+					- https://gist.github.com/sudkumar/c84be58dd644730fd3ce0ebae98a56db
+				- https://stackoverflow.com/questions/69283215/laravel-broadcasting-private-channels-not-working
+				- https://laracasts.com/discuss/channels/laravel/403-error-on-private-broadcast-channel
+				- https://stackoverflow.com/questions/46225636/pusher-doesnt-broadcast-on-private-channels-php-laravel
+				- https://medium.com/@mihkelallorg/laravel-react-jwt-tokens-and-laravel-echo-with-pusher-for-dummies-like-me-cafc5a09a1a1
+		- php artisan channel:list
+				- ERROR: Your application doesn't have any private broadcasting channels.
+					- Try:
+					php artisan config:clear
+					php artisan route:clear
+					php artisan cache:clear
+					php artisan config:cache
+					- Seems a known issue: https://laracasts.com/discuss/channels/reverb/artisan-channellist-return-doesnt-have-any-private-broadcasting-channels
+			- Same empty private channels issue in `vendor\laravel\framework\src\Illuminate\Broadcasting\Broadcasters\Broadcaster.php` >> `verifyUserCanAccessChannel()` >> `$this->channels`
+				- https://stackoverflow.com/questions/66447911/laravel-broadcasting-broadcasting-in-private-chanel-not-working-i-use-laravel-ec?rq=2
+					- https://github.com/laravel/echo/issues/302
+		- Channel name should be equal in these 3 places:
+			- app\Events\PostCreated.php >> broadcastOn()
+			- routes\channels.php >> Broadcast::channel()
+			- src\components\PusherNotifications\PusherNotifications.tsx >> echo.private()			
 ---
 
 
@@ -1326,13 +1582,13 @@ These does not populate `jobs` table: Scheduled tasks (unless they dispatch jobs
 
 **Generating Notifications**
 - Each notification is represented by a class in `app/Notifications`.
-- Use `php artisan make:notification InvoicePaid` to create a notification class.
+- Use `php artisan make:notification PostCommented` to create a notification class.
 - The notification class defines methods for different channels (e.g., `toMail`).
 
 **Sending Notifications**
 There are two ways to send notifications:
-- Using `notify` method of the `Notifiable` trait on your models (e.g., `$user->notify(new InvoicePaid($invoice))`)
-- Using the `Notification` facade to send to multiple recipients (e.g., `Notification::send($users, new InvoicePaid($invoice))`)
+- Using `notify` method of the `Notifiable` trait on your models (e.g., `$user->notify(new PostCommented($post))`)
+- Using the `Notification` facade to send to multiple recipients (e.g., `Notification::send($users, new PostCommented($post))`)
 
 **Specifying Delivery Channels**
 - The `via` method on the notification class specifies delivery channels (e.g., `mail`, `database`).
@@ -1397,7 +1653,7 @@ There are two ways to send notifications:
 
 **SMS Notifications**
 
-- Requires `laravel/vonage-notification-channel` and `guzzlehttp/guzzle` packages.
+- Requires `laravel/vonage-notification-channel` and `guzzlehttp/guzzle` packages. (GuzzleHTTP is a PHP library for making HTTP requests from PHP code easily. It handles different request types, response formats, and authentication.)
 - Environment variables for `Vonage` keys and sender number.
 
 **Formatting SMS Notifications**
@@ -1695,7 +1951,7 @@ The SOLID principles are a set of guidelines for designing software components t
 	**Example:** Laravel’s notification system allows you to send notifications via multiple channels:
 
 	```
-	Notification::send($users, new InvoicePaid($invoice));
+	Notification::send($users, new PostCommented($post));
 	```
 	
 - **6. Observer Pattern**

@@ -11,7 +11,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Post;
 
-class PostCreated
+class PostCreated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -33,7 +33,9 @@ class PostCreated
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('channel-name'),
+            new Channel('PostCreated.PublicChannel'),
+            // new PrivateChannel('PostCreatedPrivateChannel.'. $this->post->id),
+            new PrivateChannel('App.Models.User.'. $this->post->user_id),
         ];
     }
 }
