@@ -145,28 +145,353 @@
 
 ---
 
+<h2 id="docker">Docker - Dockerizing a Laravel Application </h2>
 
-## Docker
-- Files:
+### Benefits of using Docker in Laravel development Locally:
+
+- **Consistent Environment:** Ensures all developers work in the same setup, avoiding "works on my machine" issues.
+- **Easy Setup:** Quick environment setup with all dependencies via a single `docker-compose` command.
+- **Isolation:** Runs in a sandbox, preventing conflicts with other apps.
+- **Collaboration:** Simplifies onboarding and collaboration with easy-to-replicate environments.
+- **Environment Parity:** Mirrors production setup for better testing and debugging.
+- **Version Control:** Easily revert to previous states of the environment.
+- **Automated Testing:** Runs tests in clean, isolated environments for reliable results.
+
+### Benefits of using Docker in Laravel development for Deployments:
+- **Portability:** Runs on any system supporting Docker, easing transitions between environments.
+- **Scalability:** Scales applications easily by running multiple container instances.
+- **Security:** Enhances security through isolated containers.
+- **Simplified Deployment:** Streamlines updates and rollbacks, integrates well with CI/CD pipelines.
+- **Dependency Management:** Bundles all dependencies, ensuring consistent runtime environments.
+- **Immutable Infrastructure:** Uses new containers for updates, reducing configuration drift.
+- **Resource Efficiency:** More lightweight than VMs, allowing better resource utilization.
+
+### Docker Glossary:
+- **Docker Hub (hub.docker.com):** A platform for hosting Docker images, handling user authentication, automating builds, and integrating with GitHub/Bitbucket for workflows.
+- **Registry:** A service hosting Docker image repositories, accessible via Docker Hub or the `docker search` command for managing images. Common registries:
+	- **Docker Hub Registry:** Docker Hub (hub.docker.com) is the default Docker registry. It hosts many repositories, such as official images (like Nginx, Redis, MySQL) and user-created repositories.
+		- Example command to search for a repository in the Docker Hub registry: `docker search nginx`
+	- **AWS ECR (Elastic Container Registry)** is a fully-managed Docker registry by AWS. It securely stores, manages, and deploys Docker images, integrated with AWS services like ECS, EKS, and EC2. You can use AWS ECR to:
+		- **Push** Docker images from your local environment or CI/CD pipelines.
+			- `docker tag my-app:latest <aws_account_id>.dkr.ecr.<region>.amazonaws.com/my-repo:latest`
+			- `docker push <aws_account_id>.dkr.ecr.<region>.amazonaws.com/my-repo:latest`
+		- **Pull** images from ECR to deploy them to services like **ECS, EKS,** or **EC2**.
+- **Repository:** A collection of Docker images, stored in a registry and labeled with tags. Repositories can be shared by pushing to a server. E.g.: Nginx Docker Repository:
+A Docker repository named `nginx` can contain different versions (or tags) of the Nginx image, such as `nginx:1.21, nginx:1.22,` etc. Each tag represents a specific version of the image.
+Example command to pull an image from the repository: `docker pull nginx:latest`
+- **Image:** A Docker image is a set of filesystem changes and execution instructions used to create containers. Images are unchangeable.
+- **Parent Image:** The base image in a Dockerfile (specified by `FROM`) on which all other instructions build. Some do not have a parent (e.g., `FROM scratch`).
+- **Container:** A runtime instance of a Docker image, including the image, environment, and instructions. It's like a shipping container for software.
+- **Layer:** Each step in a Dockerfile creates a layer in the image. Layers are cached and only update if changed, making images efficient.
+- **Filesystem:** A system that organizes and stores files on an operating system (e.g., Linux: ext4, Windows: NTFS, macOS: HFS+).
+- **SSH:** A secure protocol for remotely accessing machines, encrypting data, and authenticating logins via public/private key pairs.
+- **Service:** Defines how to run containers in a Docker swarm, specifying the image, commands, and desired state, like the number of tasks.
+- **Volume:** A directory in a container that stores persistent data. Volumes aren’t deleted automatically and exist beyond the container's lifecycle.
+- **Dockerfile:** Specifies the environment for running a Laravel app, including PHP version and necessary extensions for proper functionality.
+- **Docker Compose:** A tool for defining and running multi-container apps using a YAML file to manage services and their configurations.
+	- **docker-compose.yml:** Configures multi-container apps with Nginx, PHP-FPM, and MySQL, ensuring they communicate over a shared network.
+- **Nginx Configuration:** Sets up the web server to manage HTTP requests and send PHP requests to the PHP-FPM container for processing.
+- **PHP Configuration:** Configures PHP settings needed to run the Laravel application effectively, ensuring proper functionality.
+- **PHP - FPM (FastCGI Process Manager):** Manages PHP processes, isolating each request to ensure that an error in one process doesn’t affect others or overall system stability.
+- **WSL:** Windows Subsystem for Linux
+
+### `docker` vs `docker-compose` commands
+- Use `docker` commands for:
+	- **Managing individual containers:** `docker start <container_id>, docker stop <container_id>, docker rm <container_id>`
+	- **Handling images:** `docker pull <image_name>, docker build -t <image_name> , docker rmi <image_name>`
+	- **Container details:** `docker inspect <container_id>, docker logs <container_id>`
+- Use `docker-compose` commands for:
+	- **Multi-container applications:** `docker-compose up -d, docker-compose down`
+	- **Service management:** `docker-compose logs, docker-compose build`
+	- **Networking and volumes:** Automatically managed by Compose
+
+### Setting Up Docker on Windows (10 Pro)
+#### Install Docker Desktop for Windows: ####
+- Download Docker Desktop for Windows from Docker's official site.
+- Run the installer and follow the instructions.
+	- Check these two checkboxes when installing:
+	- Use Windows Subsystem for Linux (WSL) 2 instead of Hyper-V (recommended)
+	- Add shortcut to desktop
+	- Restart
+	- Complete the installation of Docker Desktop.: Use recommended settings (requires administrator password)
+	- Sign in to docker.com >> Google >> xxxxxx@gmail.com
+- Ensure Docker Desktop is using the Windows Subsystem for Linux (WSL) 2 backend. This should be the default for Windows 10 Pro.
+
+#### Configure WSL 2: ####
+- Ensure WSL 2 is enabled. You can do this by opening PowerShell as an administrator and running: `wsl --set-default-version 2`
+	- OP: 
+	```
+		For information on key differences with WSL 2 please visit https://aka.ms/wsl2
+		The operation completed successfully.
+	```
+#### Install a Linux distribution from the Microsoft Store (e.g., Ubuntu). ####
+- Press `Win + S` and type `Microsoft Store` to open it.
+- Search for your preferred Linux distribution: Type `Ubuntu` in the search bar. You can choose from different versions like `Ubuntu, Ubuntu 20.04 LTS, or Ubuntu 18.04 LTS`
+- Click on the desired Ubuntu version (Ubuntu 22.04.3 LTS) and then click `Get` to start the installation.
+- Once installed, click `Launch` or find it in the Start menu and open it.
+- Enter new UNIX (root) user: abc_user | 123456
+- Update Ubuntu packages: `sudo apt update`
+
+#### Verify Docker Installation: ####
+- Open PowerShell (as Administrator if required) and run: 
+	- `docker --version`
+	- `wsl --list --verbose`
+		- This command lists all installed distributions and their WSL versions. Ensure your Ubuntu distribution is set to version 2
+
+### Docker Configuration/Setting-up Steps for Laravel project
+- Relevant Files:
 	- `Dockerfile`
 	- `docker-compose.yml`
-	- `docker-compose-sample.yml` (another sample file with set of different commands)
-- Dockerfile commands:
-	- `docker build`
-	- `docker run`
-- docker-compose.yml commands:
-	- `docker-compose up`
+	- `nginx\default.conf`
+	- `php\local.ini`
+	- `.env`
+- Build the images: `docker-compose build` or `docker-compose up --build -d` to build, run/start containers in detached(background) mode
+	- Image will be built with the name in `package-lock.json` >> "name" which is the local project folder name. 
+	- Image will be listed:
+		- List all containers: `docker-compose ps`
+			- List all containers, including stopped: `docker-compose ps -a`
+		- OR view in Docker Desktop >> Local Images
+	- If you want to delete/remove image:
+		- This will both bring down, and destroy, the containers and any associated non-volume data that was stored in them.: `docker-compose down`
+		- Remove a specific container: `docker-compose rm <container_id_or_name>` e.g: `docker-compose rm mysql`
+			- OR Delete from Docker Desktop >> Local Images
+			- Force remove a container (if the container is still running or if you encounter an issue): `docker-compose rm -f <container_id_or_name>`
+		- Stops a running Docker container: `docker stop <container_id>`
+		- If you want to create again: `docker-compose up --build -d`
+	- Lists all Docker images on your system: `docker images`
+	- Downloads (pulls) a Docker image from a remote registry, like Docker Hub, to your local system - not required right now: `docker pull mysql:5.7`
+- Starting up the containers: `docker-compose up -d`
+	- Docker will set up a network named `laravel` and start three containers based on the definitions in the `docker-compose.yml` >> `services` section. The `-d` flag keeps these containers running in the background even after their initial setup is complete. Without this flag, Docker would stop them once they've finished starting up.
+- Configuring Laravel in `.env`:
+	- `DB_HOST=db`: This tells your Laravel application to connect to the MySQL database service you defined in your Docker Compose file.
+	- `APP_URL=http://localhost:8080`: This sets the URL for your Laravel application. The port number `(8080)` should match the one you've exposed in your Nginx container, ensuring that your Laravel app can be accessed from outside your Docker container.
+		```
+		# Changes for Dockerizing - as specified in docker-compose.yml 
+		DB_CONNECTION=mysql
+		DB_HOST=db # Use the service name 'db' since that's the name of your MySQL container in docker-compose.yml
+		DB_PORT=3306 # MySQL listens on port 3306 inside the container
+		DB_DATABASE=laravel-crud-api
+		DB_USERNAME=laravel
+		DB_PASSWORD=secret
+		```
+- When change anything in these files: `docker-compose.yml`, `Dockerfile`, `nginx\default.conf`
 	- `docker-compose down`
-	- `docker-compose ps`
-	- `docker-compose build`
-	- `docker ps` (all containers)
-	- `docker ps -a` (all containers, including stopped)
-	- `docker stop <container_id>`
-	- `docker rm <container_id>`
-	- `docker images`
-	- `docker pull <image_name>`
-	- `docker exec -it <container_id> bash` (enter running container)
-	- `docker commit <container_id> <new_image_name>` (create new image from container)
+	- `docker-compose up --build -d`
+- Integration with XAMPP - Since XAMPP runs a separate Apache and MySQL service, ensure there are no port conflicts:
+	- XAMPP Apache usually runs on port `80`, so we used port `8000` for Nginx in Docker.
+	- XAMPP MySQL usually runs on port `3306`. The MySQL container in Docker will not conflict since Docker isolates container ports.
+- To view the logs of a specific container, use:
+	- `docker-compose logs app`
+	- `docker-compose logs webserver`
+	- `docker-compose logs db`
+	
+- If you cannot access your application at `http://localhost:8000`, ensure:
+	- The containers are running without errors (`docker ps` and `docker-compose logs` can help).
+	- The Nginx configuration `nginx/default.conf` points to the correct document root `/var/www/public`.
+	- Your Laravel application files are correctly copied into the Docker container by SSH into it:
+		- `docker-compose exec php bash`
+		- `cd /var/www`
+		- `ls`
+
+- Accessing the application("php") container: 
+	- Note: Instead of a VM where you ssh into the system and execute commands directly on the OS, Docker prefers that you pass commands through to the container(s) and then the output of those commands is echoed back to your terminal. 
+		- `docker-compose exec php php /var/www/artisan migrate`
+		- `docker-compose exec php php /var/www/artisan route:list`
+	- Still if you want you can SSH directly into the `php` container: `docker-compose exec php bash`
+		- Now can run any command:
+			- `cd /var/www`
+			- `ls`
+			- `php artisan migrate`
+			- `composer install (not required)`
+			- `composer clear-cache (not required)`
+			- `composer dump-autoload (not required)`
+			- `exit`
+- Accessing the application on the browser: 
+	- No need to run `php artisan serve` which is used for development when running the built-in PHP development server, but in this Docker setup, Nginx is configured to serve the application.
+	- `http://localhost:8080/`
+- Accessing Swagger documentation: `http://localhost:8080/api/documentation`
+- Accessing MySQL database using MySQL Workbench:
+	- Hostname: `localhost` or `127.0.0.1` (this points to your local machine)
+	- Port: `3307` (since you're mapping container's MySQL port `3306` to port `3307` on your local machine)
+	- Username: `laravel` (as set in your `docker-compose.yml` under `MYSQL_USER`)
+	- Password: `secret` (as set in `MYSQL_PASSWORD`)
+	- Database: `laravel-crud-api` (optional, you can specify the database here or leave it blank to see all databases)
+	- **important**: SSL tab > No SSL. Otherwise you'll get SSL connection error.
+	- Troubleshooting
+		- Firewall: Ensure your firewall allows connections to port `3306`
+		- MySQL Configuration: Ensure the MySQL server in the Docker container is properly configured to accept connections from the host.
+
+- Running multiple projects on your local machine: 
+	- Create `docker-compose.yml` in that project folder with different network name, ports to expose on your local machine (e.g. `8080` for one, `8081` for another). 
+
+### Automatic Deployment of a locally Dockerized Laravel application to AWS using CI/CD ###
+#### Summary ####
+- **CI/CD stack used(not in exact order):**
+	- Local Docker env >> Bitbucket >>
+	- AWS CodePipeline 
+		- SourceStage: source Bitbucket, Input Artifacts: SourceArtifacts
+		- BuildStage: AWS CodeBuild 
+			- uses buildspec.yml commands to Push Docker image to AWS ECR
+		- DeploymentStage: AWS CodeDeploy
+			- AWS ECR >> Connect and get image Artifacts build previously by CodeBuild from ECR and deploy to ECS cluster >>  AWS ECS
+			- Output Artifacts: BuildArtifacts
+			- AWS EC2/Fargate  
+		- EC2 > Route 53 to setup custom domain
+- **AWS ECR(Elastic Container Registry):** A fully managed container registry service that allows you to store, share, and deploy your container images securely and efficiently.
+- **AWS Elastic Beanstalk:** Easiest for deployment but less configurations and control.
+- **AWS ECS - Elastic Container Service (with EC2 or Fargate):** More control and scalability.
+- **AWS Route 53:** Manage your custom domain and SSL certificates.
+- **AWS Fargate:** A serverless cloud computing service that allows you to run  Docker containers without managing servers or infrastructure. It automatically scales resources based on demand and charges only for the resources used.
+#### Step 1: Dockerize the Laravel Application Locally as done above ####
+
+#### Step 2 -  Add relevant commands to buildspec.yml to be used in AWS CodePipeline > AWS CodeBuild (This setup streamline the process of building and deploying Docker images to AWS ECS through AWS ECR): ####
+- Set following environment variables in the AWS CodeBuild project:
+	```
+	AWS_ACCOUNT_ID
+	AWS_DEFAULT_REGION
+	ECR_REPOSITORY_NAME
+	ECS_CLUSTER_NAME
+	ECS_SERVICE_NAME
+	```
+- **Install Phase:** Added Docker installation along with PHP and AWS CLI.
+- **Pre-build Phase:** Logs into ECR and sets up variables for the repository URI and the image tag (using the CodeBuild commit ID).
+- **Build Phase:** Builds the Docker image and tags it with both latest and the specific commit ID tag.
+- **Post-build Phase:**
+	- Pushes the Docker image to ECR.
+	- Deploys the updated image to ECS by forcing a new deployment.
+
+**buildspec.yml:**
+```
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      php: 8.2
+      docker: 20
+    commands:
+      - apt-get update
+      - apt-get install -y zip unzip awscli docker
+      - cd src
+      - composer install --no-interaction --no-scripts
+      - cd ..
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY_NAME
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+  build:
+    commands:
+      - echo "Building the Docker image started on:"  `date`
+      - docker build -t $ECR_REPOSITORY_NAME ./src
+      - docker tag $ECR_REPOSITORY_NAME:latest $REPOSITORY_URI:latest
+      - docker tag $ECR_REPOSITORY_NAME:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo "Pushing the Docker images to ECR..."
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo "Updating the ECS service..."
+      - aws ecs update-service --cluster $ECS_CLUSTER_NAME --service $ECS_SERVICE_NAME --force-new-deployment
+artifacts:
+  files: '**/*'
+  base-directory: 'src/'
+  exclude-paths: '**/src/vendor'
+```
+ 
+#### Step 3 - ECR configuration - Create an ECR Repository: ####
+Amazon ECR > Create a new repository for the Laravel Docker image
+
+#### Step 4 - Option 1: Deploy to AWS (Elastic Beanstalk Option - for simpler deployments) ####
+Elastic Beanstalk handles orchestration (like provisioning EC2, load balancers, etc.) for you, making it simpler to deploy the Dockerized Laravel app.
+
+##### Step 1: Create an Elastic Beanstalk Application #####
+- Go to **AWS Management Console** > **Elastic Beanstalk**
+- Click **Create Application**
+- Choose **Platform**: Docker (not PHP)
+- For the application, configure Docker as the environment
+
+##### Step 2: Setup AWS CodePipeline for CI/CD #####
+- Go to **AWS Management Console > CodePipeline > Create Pipeline**
+- **Source: Bitbucket** as the repository provider, link your Bitbucket repository
+- **Build Stage:**
+	- Choose **AWS CodeBuild** for building the Docker image
+	- Create a `buildspec.yml` file in your project root as above
+- **Deploy Stage:**
+	- AWS CodeDeploy will take Artifacts from AWS ECR 
+	- Choose **Elastic Beanstalk** as the deploy provider
+	- Choose the previously created **Elastic Beanstalk environment**
+
+##### Step 3: Route 53 Domain Setup #####
+- Go to **Route 53 > Create Hosted Zone** for abc.com
+- Add an **A Record** pointing to the **Elastic Beanstalk URL**
+- Use **SSL certificates** (via ACM) for HTTPS
+
+#### Step 4 - Option 2: Deploy to AWS (ECS with EC2 or Fargate Option) ####
+##### Step 1: Create ECS Cluster and Task Definition #####
+- **Amazon ECS > Create Cluster**
+	- Choose **EC2 Linux + Networking** or **Fargate** based on your use case. If you want a serverless option select Fargate.
+- **Amazon ECS > Create Task Definition:**
+	- Define a new **Task Definition** that specifies how to run the Docker container
+- **Specify the Docker image location** (from your ECR)
+	- Select **EC2** or **Fargate** and configure your container with your image from ECR (Docker image, ports, etc.)
+	- Set environment variables such as DB_CONNECTION, DB_HOST, DB_USERNAME, DB_PASSWORD, etc.
+- **Create Service:**
+	- Cluster >> create a service that uses above task definition
+	- Set up autoscaling, load balancers (If you need high availability, set up an Application Load Balancer under EC2) , and security groups as needed.
+- **Set Up Database (RDS):**
+	- Use Amazon RDS to create a MySQL or PostgreSQL instance.
+	- Set environment variables in your ECS task to connect to the RDS database.
+
+##### Step 2: Push Docker Image to ECR #####
+- Create an **ECR repository**:
+	- Go to ECR > Create Repository.
+	- Tag and push your Docker image to ECR - commands added in buildspec.yml
+
+##### Step 3: Configure AWS CodePipeline for CI/CD #####
+- Go to **AWS CodePipeline > Create Pipeline**
+- **Source: Bitbucket**
+- **Build Stage:**
+	- Use **AWS CodeBuild** to build and push the Docker image to ECR.
+	- `buildspec.yml` similar to above.
+- **Deploy Stage:**
+	- Choose **Amazon ECS**
+	- Select the ECS Cluster and Service to deploy the new task.
+
+##### Step 4: Set Up Route 53 Domain #####
+- Go to **Route 53 > Create Hosted Zone** for abc.com
+- Add an **A Record** pointing to the **ECS Load Balancer**
+- Use **SSL certificates** (via ACM) for HTTPS
+
+#### Step 5: Additional AWS Setup ####
+- EC2 Instances for ECS Cluster
+	- When using **EC2**, create EC2 instances to host your ECS containers.
+	- If you opt for **Fargate**, you won’t need to manage EC2 instances (serverless).
+- Setup Storage (S3)
+	- If your Laravel app uses local file storage, you should switch to using AWS S3. Install the S3 filesystem package for Laravel:
+		`composer require league/flysystem-aws-s3-v3`
+
+- Update .env with S3 credentials:
+```
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_DEFAULT_REGION=your_region
+AWS_BUCKET=your_bucket_name
+```
+
+- Update config/filesystems.php to use S3:
+```
+'disks' => [
+    's3' => [
+        'driver' => 's3',
+        'key' => env('AWS_ACCESS_KEY_ID'),
+        'secret' => env('AWS_SECRET_ACCESS_KEY'),
+        'region' => env('AWS_DEFAULT_REGION'),
+        'bucket' => env('AWS_BUCKET'),
+    ],
+],
+```
+
 
 ---
 
@@ -1055,7 +1380,7 @@ These does not populate `jobs` table: Scheduled tasks (unless they dispatch jobs
 - **Laravel Events:** 
 	- Events in Laravel allow you to implement the `Observer Pattern`, where events are dispatched, and multiple listeners can respond to them, promoting loose coupling in your application. In other words, decouples components of an application by using events as a communication mechanism.
 	- Use `php artisan event:list` to list registered listeners.
-	- Consider using event sourcing for storing a complete history of events, enabling easier auditing and replay. Use `Spatie Laravel Event Sourcing` packag: https://spatie.be/index.php/docs/laravel-event-sourcing/v7/introduction
+	- Consider using event sourcing for storing a complete history of events, enabling easier auditing, replay and history reporting. Use `Spatie Laravel Event Sourcing` packag: https://spatie.be/index.php/docs/laravel-event-sourcing/v7/introduction
 
 - **Generating Events & Listeners:**
     Use Artisan commands to create events and listeners:

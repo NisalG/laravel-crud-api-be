@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
-use App\Swagger\Schemas;
+use App\Swagger\PostSchema;
 use App\Http\Resources\PostResource;
 use App\Jobs\SendPostUpdatedEmailJob;
 

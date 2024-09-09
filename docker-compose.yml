@@ -1,47 +1,54 @@
-version: '3.8'
-
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: laravel_app
-    container_name: laravel_app
-    restart: unless-stopped
-    working_dir: /var/www
-    volumes:
-      - .:/var/www
-      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
-    networks:
-      - laravel
-
-  webserver:
-    image: nginx:alpine
+services: # list of services (the images that’ll make our application stack)
+  webserver: # webserver container
+    image: nginx:stable-alpine
     container_name: nginx
     restart: unless-stopped
     ports:
-      - "8000:80"
+      - "8080:80" # map port 80 on the container to port 8080 on the host(exposing its :80 port as :8080 on our local machine - adjust it to any non-reserved port number)
     volumes:
-      - .:/var/www
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - .:/var/www # map the current directory on the host to /var/www on the container
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf # map the default.conf file on the host to /etc/nginx/conf.d/default.conf on the container
     networks:
       - laravel
     depends_on:
-      - app
+      # - app
+      - php # php containers need to be running before nginx, otherwise if we spin up the nginx container, it would also boot up both of those dependent containers 
+      - db # mysql containers need to be running before nginx, otherwise if we spin up the nginx container, it would also boot up both of those dependent containers 
 
-  db:
-    image: mysql:5.7
+  db: # db container
+    image: mysql:5.7.22
     container_name: mysql
     restart: unless-stopped
+    tty: true
+    ports: 
+      - "3307:3306" # This maps port 3306 inside the container (which is the default port MySQL listens on) to port 3307 on your local machine. This allows you to connect to the MySQL database running in the container by connecting to localhost:3307 on your machine
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: laravel
+      MYSQL_DATABASE: laravel-crud-api
       MYSQL_USER: laravel
       MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
     volumes:
       - dbdata:/var/lib/mysql
     networks:
       - laravel
+
+  php: # php container
+    build:
+      context: . # build from the current project directory
+      dockerfile: Dockerfile
+    container_name: php
+    restart: unless-stopped
+    # tty: true
+    working_dir: /var/www
+    volumes: 
+        - .:/var/www # map the current directory on the host to /var/www/app on the container - Like with our nginx container we’re specifying the same volume for the root directory
+    ports: 
+        # - "${PHP_HOST_PORT}:${PHP_DOCKER_CONTAINER_PORT}" # map(expose) port ${PHP_HOST_PORT} on the container to port ${PHP_DOCKER_CONTAINER_PORT} on the host
+        - "9000:9000" # map(expose) port 9000 on the container to port 9000 on the host
+    networks: 
+        - laravel
 
 networks:
   laravel:

@@ -33,7 +33,7 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-            "app/Swagger/Schemas.php"
+            "app/Swagger/PostSchema.php"
         ]
     },
     "autoload-dev": {

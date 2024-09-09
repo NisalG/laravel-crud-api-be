@@ -46,4 +46,4 @@ use OpenApi\Annotations as OA;
 * )
 */
 
-class Post {}
+class PostSchema {}

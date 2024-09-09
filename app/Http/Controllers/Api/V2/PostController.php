@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
-use App\Swagger\Schemas;
+use App\Swagger\PostSchema;
 use App\Http\Resources\PostResource;
 use App\Jobs\SendPostUpdatedEmailJob;
 use App\Services\PostValidatorService;
@@ -47,7 +47,7 @@ class PostController extends Controller
      *         description="Success",
      *         @OA\JsonContent(
      *             type="array",
-     *             @OA\Items(ref="#/components/schemas/Post")
+     *             @OA\Items(ref="#/components/schemas/PostSchema")
      *         )
      *     ),
      *     @OA\Response(
@@ -109,7 +109,7 @@ class PostController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Success",
-     *         @OA\JsonContent(ref="#/components/schemas/Post")
+     *         @OA\JsonContent(ref="#/components/schemas/PostSchema")
      *     ),
      *     @OA\Response(
      *         response=404,
@@ -165,7 +165,7 @@ class PostController extends Controller
      * @return \Illuminate\Http\Response
      */
     /**
-     * @OA\Post(
+     * @OA\PostSchema(
      *     path="/api/posts",
      *     summary="Store a newly created post",
      *     tags={"Posts"},
@@ -177,7 +177,7 @@ class PostController extends Controller
      *     @OA\Response(
      *         response=201,
      *         description="Successful operation",
-     *         @OA\JsonContent(ref="#/components/schemas/Post")
+     *         @OA\JsonContent(ref="#/components/schemas/PostSchema")
      *     ),
      *     @OA\Response(
      *         response=422,
@@ -238,12 +238,12 @@ class PostController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/Post")
+     *         @OA\JsonContent(ref="#/components/schemas/PostSchema")
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Success",
-     *         @OA\JsonContent(ref="#/components/schemas/Post")
+     *         @OA\JsonContent(ref="#/components/schemas/PostSchema")
      *     ),
      *     @OA\Response(
      *         response=404,
